@@ -560,10 +560,12 @@ function renderQuestions() {
 
   const filtered = getFilteredQuestions();
   const cardsHtml = filtered.length
-    ? filtered.map((q,i) => renderQCard(q, i+1)).join('')
+    ? filtered.map(q => renderQCard(q, (q._poolIndex ?? 0) + 1)).join('')
     : `<div class="no-results"><div class="no-icon">🔍</div>Žiadne otázky pre vybrané filtre</div>`;
 
-  const safeSearch = qFilter.search.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  const safeSearch = qFilter.search
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
   app.innerHTML = `
     <div class="questions-page">
@@ -609,8 +611,6 @@ function getFilteredQuestions() {
 }
 
 function setQFilter(key, val) {
-  const searchEl = document.querySelector('.search-input');
-  if (searchEl) qFilter.search = searchEl.value;
   qFilter[key] = val;
   renderQuestions();
 }
@@ -621,7 +621,7 @@ function updateQSearch(val) {
   const qList = document.getElementById('q-list');
   const countEl = document.getElementById('q-count');
   if (qList) qList.innerHTML = filtered.length
-    ? filtered.map((q,i) => renderQCard(q, i+1)).join('')
+    ? filtered.map(q => renderQCard(q, (q._poolIndex ?? 0) + 1)).join('')
     : `<div class="no-results"><div class="no-icon">🔍</div>Žiadne otázky pre vybrané filtre</div>`;
   if (countEl) countEl.textContent = `${filtered.length} z ${questions.length} otázok`;
 }
