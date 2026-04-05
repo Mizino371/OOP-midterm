@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OOP Zápočtový Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#242836;--surface3:#2e3347;
+  --accent:#6c63ff;--accent-hover:#7b73ff;--accent-glow:rgba(108,99,255,.25);
+  --green:#22c55e;--green-bg:rgba(34,197,94,.12);
+  --red:#ef4444;--red-bg:rgba(239,68,68,.12);
+  --yellow:#f59e0b;--yellow-bg:rgba(245,158,11,.12);
+  --text:#e4e4e7;--text-dim:#9ca3af;--text-muted:#6b7280;
+  --radius:12px;--radius-sm:8px;--radius-xs:6px;
+  --font:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+html{font-size:16px}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+code,pre,.mono{font-family:var(--mono)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+
+/* Start Screen */
+.start-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;animation:fadeIn .6s ease}
+.start-screen h1{font-size:2.5rem;font-weight:800;margin-bottom:.5rem;background:linear-gradient(135deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.start-screen p{color:var(--text-dim);font-size:1.1rem;margin-bottom:2rem;max-width:480px;line-height:1.6}
+.start-screen .stats{display:flex;gap:2rem;margin-bottom:2.5rem;flex-wrap:wrap;justify-content:center}
+.stat-card{background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);padding:1.25rem 1.5rem;min-width:130px}
+.stat-card .num{font-size:1.8rem;font-weight:800;color:var(--accent)}
+.stat-card .label{font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-top:.25rem}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem 2rem;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s ease;outline:none}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 20px var(--accent-glow)}
+.btn-primary:hover{background:var(--accent-hover);box-shadow:0 6px 30px var(--accent-glow)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--surface3)}
+.btn-secondary:hover{background:var(--surface3)}
+.btn-sm{padding:.6rem 1.2rem;font-size:.875rem}
+
+/* Quiz Container */
+.quiz-container{max-width:760px;margin:0 auto;padding:1.5rem 1.5rem 6rem}
+
+/* Header */
+.quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
+.quiz-header .q-count{font-size:.9rem;color:var(--text-dim);font-weight:500}
+.quiz-header .score-display{display:flex;align-items:center;gap:.5rem;font-size:.9rem;font-weight:600;color:var(--green)}
+.quiz-header .score-display svg{width:18px;height:18px}
+
+/* Progress bar */
+.progress-wrap{width:100%;height:6px;background:var(--surface2);border-radius:3px;margin-bottom:2rem;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),#a78bfa);border-radius:3px;transition:width .4s ease}
+
+/* Question card */
+.question-card{background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius);padding:2rem;animation:slideIn .35s ease;position:relative}
+.question-card.exit{animation:slideOut .25s ease forwards}
+@keyframes slideIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-16px)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.badge-row{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .7rem;border-radius:20px;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.badge-single{background:rgba(108,99,255,.15);color:#a78bfa}
+.badge-multi{background:var(--yellow-bg);color:var(--yellow)}
+.badge-fill{background:var(--green-bg);color:var(--green)}
+.badge-order{background:rgba(236,72,153,.12);color:#ec4899}
+.badge-match{background:rgba(6,182,212,.12);color:#06b6d4}
+.badge-topic{background:var(--surface2);color:var(--text-dim)}
+
+.question-text{font-size:1.15rem;font-weight:600;line-height:1.6;margin-bottom:1.5rem;white-space:pre-line}
+.question-text code{background:var(--surface2);padding:.15em .4em;border-radius:4px;font-size:.9em;color:#a78bfa}
+
+/* Options (single/multi) */
+.options-list{display:flex;flex-direction:column;gap:.6rem;list-style:none}
+.option-btn{width:100%;text-align:left;padding:.9rem 1.1rem;background:var(--surface2);border:2px solid transparent;border-radius:var(--radius-sm);font-family:var(--font);font-size:.95rem;color:var(--text);cursor:pointer;transition:all .2s ease;display:flex;align-items:center;gap:.75rem;line-height:1.5}
+.option-btn:hover:not(.disabled){border-color:var(--accent);background:rgba(108,99,255,.08)}
+.option-btn.selected{border-color:var(--accent);background:rgba(108,99,255,.12)}
+.option-btn.correct{border-color:var(--green);background:var(--green-bg)}
+.option-btn.incorrect{border-color:var(--red);background:var(--red-bg)}
+.option-btn.disabled{cursor:default;opacity:.85}
+.option-btn .marker{width:28px;height:28px;border-radius:50%;border:2px solid var(--surface3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.8rem;font-weight:600;color:var(--text-muted);transition:all .2s}
+.option-btn.selected .marker{border-color:var(--accent);background:var(--accent);color:#fff}
+.option-btn.correct .marker{border-color:var(--green);background:var(--green);color:#fff}
+.option-btn.incorrect .marker{border-color:var(--red);background:var(--red);color:#fff}
+.option-btn .option-text{flex:1}
+.option-btn .option-text code{background:var(--surface3);padding:.1em .35em;border-radius:3px;font-size:.88em}
+
+/* Fill input */
+.fill-input-wrap{position:relative;margin-bottom:1rem}
+.fill-input{width:100%;padding:.9rem 1.1rem;background:var(--surface2);border:2px solid var(--surface3);border-radius:var(--radius-sm);font-family:var(--mono);font-size:1rem;color:var(--text);outline:none;transition:border-color .2s}
+.fill-input:focus{border-color:var(--accent)}
+.fill-input.correct{border-color:var(--green)}
+.fill-input.incorrect{border-color:var(--red)}
+.fill-hint{font-size:.82rem;color:var(--text-muted);margin-top:.5rem}
+.fill-answer{font-size:.9rem;color:var(--green);margin-top:.5rem;font-weight:500}
+
+/* Order (drag & drop) */
+.order-list{display:flex;flex-direction:column;gap:.5rem;list-style:none}
+.order-item{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;background:var(--surface2);border:2px solid transparent;border-radius:var(--radius-sm);cursor:grab;user-select:none;transition:all .2s}
+.order-item:active{cursor:grabbing}
+.order-item.dragging{opacity:.5;border-color:var(--accent)}
+.order-item .order-num{width:26px;height:26px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;color:var(--text-muted);flex-shrink:0}
+.order-item.correct{border-color:var(--green)}
+.order-item.incorrect{border-color:var(--red)}
+.order-item.correct .order-num{background:var(--green);color:#fff}
+.order-item.incorrect .order-num{background:var(--red);color:#fff}
+
+/* Match */
+.match-container{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.match-col-title{font-size:.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+.match-item{padding:.75rem 1rem;background:var(--surface2);border:2px solid transparent;border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;font-size:.9rem;margin-bottom:.5rem;text-align:center}
+.match-item:hover{border-color:var(--accent)}
+.match-item.selected{border-color:var(--accent);background:rgba(108,99,255,.12)}
+.match-item.matched{border-color:var(--green);background:var(--green-bg);cursor:default}
+.match-item.wrong{border-color:var(--red);animation:shake .4s ease}
+.match-item.disabled{cursor:default;opacity:.6}
+.match-line{font-size:.75rem;color:var(--text-muted);text-align:center;margin-bottom:.3rem}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+/* Feedback */
+.feedback{margin-top:1rem;padding:.85rem 1rem;border-radius:var(--radius-sm);font-size:.9rem;font-weight:500;animation:fadeIn .3s ease}
+.feedback-correct{background:var(--green-bg);color:var(--green);border-left:3px solid var(--green)}
+.feedback-incorrect{background:var(--red-bg);color:var(--red);border-left:3px solid var(--red)}
+
+/* Next button */
+.next-wrap{margin-top:1.5rem;display:flex;justify-content:flex-end}
+
+/* Nav dots */
+.nav-dots{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--surface3);padding:.75rem 1rem;display:flex;justify-content:center;gap:6px;flex-wrap:wrap;z-index:100;max-height:80px;overflow-y:auto}
+.nav-dot{width:12px;height:12px;border-radius:50%;background:var(--surface3);border:none;cursor:pointer;transition:all .2s;flex-shrink:0}
+.nav-dot.current{background:var(--accent);box-shadow:0 0 8px var(--accent-glow);transform:scale(1.3)}
+.nav-dot.correct-dot{background:var(--green)}
+.nav-dot.incorrect-dot{background:var(--red)}
+.nav-dot.unanswered{background:var(--surface3)}
+
+/* Results */
+.results-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;animation:fadeIn .6s ease}
+.results-emoji{font-size:4rem;margin-bottom:1rem}
+.results-title{font-size:2rem;font-weight:800;margin-bottom:.5rem}
+.results-pct{font-size:3.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.25rem}
+.results-sub{color:var(--text-dim);font-size:1.1rem;margin-bottom:2rem}
+.results-actions{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.results-breakdown{margin-top:2rem;display:flex;gap:2rem;flex-wrap:wrap;justify-content:center}
+.rb-item{background:var(--surface);border:1px solid var(--surface3);border-radius:var(--radius-sm);padding:1rem 1.5rem;text-align:center;min-width:100px}
+.rb-item .rb-num{font-size:1.5rem;font-weight:700}
+.rb-item .rb-label{font-size:.75rem;color:var(--text-muted);margin-top:.2rem}
+
+/* Report button */
+.report-btn{display:inline-flex;align-items:center;gap:.4rem;margin-top:.75rem;padding:.45rem .9rem;background:transparent;border:1px solid var(--surface3);border-radius:var(--radius-xs);font-family:var(--font);font-size:.78rem;color:var(--text-muted);cursor:pointer;transition:all .2s;text-decoration:none}
+.report-btn:hover{border-color:var(--yellow);color:var(--yellow)}
+
+/* Responsive */
+@media(max-width:600px){
+  .start-screen h1{font-size:1.8rem}
+  .question-card{padding:1.25rem}
+  .question-text{font-size:1.05rem}
+  .match-container{grid-template-columns:1fr;gap:.5rem}
+  .quiz-container{padding:1rem 1rem 5.5rem}
+  .nav-dots{gap:4px;padding:.5rem .75rem}
+  .nav-dot{width:10px;height:10px}
+}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ===================== QUESTIONS POOL (200) =====================
+const questions = [
+// ===== P1 – OOP paradigma, trieda/objekt, enkapsulácia, access modifiers (~40) =====
+{type:'single',topic:'P1',q:'Aký je hlavný rozdiel medzi procedurálnym a OOP programovaním?',options:['Procedurálne je rýchlejšie','Procedurálne oddeľuje dáta a funkcie, OOP ich spája do objektov','OOP nepoužíva funkcie','Procedurálne neumožňuje cykly'],answer:[1]},
+{type:'single',topic:'P1',q:'Čo predstavuje "trieda" v Jave?',options:['Konkrétny objekt v pamäti','Predlohu (blueprint) na tvorbu objektov','Metódu bez parametrov','Typ primitívnej premennej'],answer:[1]},
+{type:'single',topic:'P1',q:'Aký je vzťah medzi triedou a objektom?',options:['Trieda je inštanciou objektu','Trieda a objekt sú to isté','Objekt je inštanciou triedy','Trieda existuje len za behu programu'],answer:[2]},
+{type:'single',topic:'P1',q:'Ktorý princíp OOP hovorí o skrytí vnútorného stavu objektu?',options:['Dedičnosť','Polymorfizmus','Zapuzdrenie (Encapsulation)','Abstrakcia'],answer:[2]},
+{type:'single',topic:'P1',q:'Ktorý modifikátor prístupu sa najčastejšie používa na zabezpečenie enkapsulácie atribútov?',options:['public','private','static','protected'],answer:[1]},
+{type:'single',topic:'P1',q:'Aký modifikátor prístupu má atribút, ak pred ním neuvedieme žiadny?',options:['public','private','protected','package-private'],answer:[3]},
+{type:'single',topic:'P1',q:'Čo umožňuje `protected` modifikátor?',options:['Prístup odkiaľkoľvek','Prístup len z tej istej triedy','Prístup z rovnakého balíka a podtried','Prístup len zo podtried iného balíka'],answer:[2]},
+{type:'multi',topic:'P1',q:'Ktoré sú platné access modifikátory v Jave? (vyber všetky správne)',options:['public','private','protected','internal','package-private (default)'],answer:[0,1,2,4]},
+{type:'single',topic:'P1',q:'Aká je konvencia pomenovania tried v Jave?',options:['camelCase','snake_case','PascalCase','UPPER_CASE'],answer:[2]},
+{type:'single',topic:'P1',q:'Aká je konvencia pomenovania metód a premenných v Jave?',options:['PascalCase','snake_case','camelCase','kebab-case'],answer:[2]},
+{type:'single',topic:'P1',q:'Ako vyzerá správny názov balíka (package) v Jave?',options:['MojBalik','mojBalik','moj_balik','sk.stuba.fiit'],answer:[3]},
+{type:'single',topic:'P1',q:'Čo je getter metóda?',options:['Metóda na nastavenie hodnoty atribútu','Metóda na získanie hodnoty atribútu','Konštruktor triedy','Statická inicializačná metóda'],answer:[1]},
+{type:'single',topic:'P1',q:'Aký je rozdiel medzi getter a setter metódou?',options:['Getter mení hodnotu, setter číta','Getter číta hodnotu atribútu, setter mení hodnotu atribútu','Obidve robia to isté','Getter je statický, setter nie'],answer:[1]},
+{type:'single',topic:'P1',q:'Prečo je vhodné mať validáciu v setter metódach?',options:['Kvôli výkonu','Na zabezpečenie konzistencie dát a zabránenie neplatným stavom','Je to povinné v Jave','Kvôli dedičnosti'],answer:[1]},
+{type:'single',topic:'P1',q:'Čo je "Abstrakcia" v OOP?',options:['Skrytie implementácie pomocou private','Zameranie sa na podstatné vlastnosti a ignorovanie nepodstatných detailov','Dedenie vlastností z nadtriedy','Schopnosť mať viacero foriem'],answer:[1]},
+{type:'single',topic:'P1',q:'Aký je rozdiel medzi abstrakciou a enkapsuláciou?',options:['Nie je žiadny rozdiel','Abstrakcia je na design úrovni, enkapsulácia na implementačnej úrovni','Enkapsulácia je na design úrovni, abstrakcia na implementačnej','Abstrakcia skrýva pamäť, enkapsulácia kód'],answer:[1]},
+{type:'single',topic:'P1',q:'Čo znamená "Dedičnosť" (Inheritance)?',options:['Skrytie dát pomocou modifikátorov','Preberanie vlastností a správania od inej triedy','Schopnosť mať viacero foriem','Vytváranie nových typov'],answer:[1]},
+{type:'single',topic:'P1',q:'Od koľkých tried môže v Jave priamo dediť jedna trieda?',options:['Neobmedzene','Maximálne od dvoch','Maximálne od jednej','Maximálne od troch'],answer:[2]},
+{type:'single',topic:'P1',q:'Ak v Jave explicitne neuvediete, od ktorej triedy vaša trieda dedí, od ktorej triedy dedí automaticky?',options:['Base','Root','Object','Main'],answer:[2]},
+{type:'single',topic:'P1',q:'Sú v Jave konštruktory dedené do podtried?',options:['Áno, všetky konštruktory sa dedia','Áno, ale len bezparametrické','Nie, konštruktory sa nededia','Áno, ale len public konštruktory'],answer:[2]},
+{type:'single',topic:'P1',q:'Kedy nastáva rozhodnutie o tom, ktorá metóda sa zavolá pri Method Overloading?',options:['Za behu programu (Runtime)','Počas kompilácie (Compile time)','Pri načítaní triedy','Pri prvom volaní metódy'],answer:[1]},
+{type:'single',topic:'P1',q:'Čo je Method Overloading?',options:['Zmena implementácie zdedenej metódy v podtriede','Metódy s rovnakým názvom, ale rôznymi parametrami v tej istej triede','Volanie metódy rodičovskej triedy','Skrytie metódy v podtriede'],answer:[1]},
+{type:'single',topic:'P1',q:'Čo je Interface v Jave?',options:['Abstraktná trieda bez atribútov','Predpis metód bez implementácie, ktoré musí trieda implementovať','Druh kolekcie','Typ výnimky'],answer:[1]},
+{type:'single',topic:'P1',q:'Kedy by mali ideálne vznikať UML diagramy?',options:['Po dokončení programovania','Počas testovania','Pred samotným programovaním, ako súčasť návrhu','Nikdy, sú zbytočné'],answer:[2]},
+{type:'single',topic:'P1',q:'Aký je rozdiel medzi operátorom == a metódou equals() pri objektoch?',options:['Nie je žiadny rozdiel','== porovnáva obsah, equals() referencie','== porovnáva referencie objektov, equals() porovnáva obsah','Obe porovnávajú obsah'],answer:[2]},
+{type:'single',topic:'P1',q:'Čo znamená "pass by value" v Jave?',options:['Metóda mení pôvodný objekt','Do metódy sa posiela kópia hodnoty argumentu','Metóda dostane referenziu na originál','Primitívne typy sa neskopírujú'],answer:[1]},
+{type:'single',topic:'P1',q:'Čo sa stane, ak nezadefinujeme žiaden konštruktor v triede?',options:['Kompilačná chyba','Trieda bude abstraktná','Java automaticky vytvorí prázdny (default) konštruktor bez parametrov','Program sa nespustí'],answer:[2]},
+{type:'fill',topic:'P1',q:'Doplň: Kľúčové slovo na vytvorenie novej inštancie triedy je ___.',answer:['new'],hint:'3 písmená'},
+{type:'fill',topic:'P1',q:'Doplň: Wrapper trieda pre primitívny typ `int` je ___.',answer:['Integer','integer'],hint:'Začína veľkým písmenom'},
+{type:'fill',topic:'P1',q:'Doplň: Kľúčové slovo na dedenie v Jave je ___.',answer:['extends'],hint:'Anglické sloveso'},
+{type:'fill',topic:'P1',q:'Doplň: Setter metóda pre atribút `name` sa podľa konvencie volá ___.',answer:['setName','setname'],hint:'set + názov atribútu'},
+{type:'multi',topic:'P1',q:'Ktoré sú štyri piliere OOP? (vyber všetky správne)',options:['Enkapsulácia','Kompressia','Dedičnosť','Polymorfizmus','Serializácia','Abstrakcia'],answer:[0,2,3,5]},
+{type:'single',topic:'P1',q:'Čo je statický (static) atribút v triede?',options:['Atribút, ktorý sa nemôže zmeniť','Atribút zdieľaný medzi všetkými inštanciami triedy','Atribút dostupný len z konštruktora','Atribút bez modifikátora prístupu'],answer:[1]},
+{type:'single',topic:'P1',q:'Čo robí kľúčové slovo `final` pri atribúte?',options:['Skryje atribút','Atribút nemôže byť zmenený po inicializácii','Atribút je zdieľaný','Atribút je abstraktný'],answer:[1]},
+{type:'single',topic:'P1',q:'Čo je "paradigm shift" v kontexte OOP?',options:['Nová verzia jazyka Java','Zmena spôsobu myslenia z procedurálneho na objektové','Druh refaktoringu','Typ dizajnového vzoru'],answer:[1]},
+{type:'single',topic:'P1',q:'Hlavná úloha JVM (Java Virtual Machine)?',options:['Kompilovať zdrojový kód do bytekódu','Vykonávať bytekód a optimalizovať beh programu na danej platforme','Správa databázových spojení','Generovanie dokumentácie'],answer:[1]},
+{type:'single',topic:'P1',q:'Čo znamená "Write once, run everywhere"?',options:['Java kód sa automaticky prekladá do C','Kód možno spustiť na akejkoľvek platforme s nainštalovaným JVM','Java podporuje všetky operačné systémy bez kompilácie','Java kód sa nemusí kompilovať'],answer:[1]},
+{type:'match',topic:'P1',q:'Spáruj UML symbol s modifikátorom prístupu:',pairs:[{left:'-',right:'private'},{left:'+',right:'public'},{left:'#',right:'protected'},{left:'~',right:'package-private'}]},
+{type:'match',topic:'P1',q:'Spáruj konvenciu pomenovania s použitím:',pairs:[{left:'PascalCase',right:'Názvy tried'},{left:'camelCase',right:'Metódy a premenné'},{left:'UPPER_SNAKE_CASE',right:'Konštanty (final static)'}]},
+{type:'order',topic:'P1',q:'Zoraď kroky vytvorenia a použitia objektu v správnom poradí:',items:['Definuj triedu s atribútmi a metódami','Vytvor inštanciu pomocou kľúčového slova new','Zavolaj metódy na vytvorenom objekte'],answer:[0,1,2]},
+{type:'single',topic:'P1',q:'Čo je UML diagram tried (Class Diagram)?',options:['Diagram tokov dát','Vizuálna reprezentácia tried, ich atribútov, metód a vzťahov','Diagram databázových tabuliek','Vývojový diagram algoritmov'],answer:[1]},
+
+// ===== P2 – Dedenie, konštruktory, overloading/overriding, polymorfizmus, abstrakcia, interface (~40) =====
+{type:'single',topic:'P2',q:'Čo sa stane, ak v konštruktore podtriedy zabudnete explicitne zavolať super() a predok nemá bezparametrický konštruktor?',options:['Nič, Java doplní prázdny konstruktor','Varovanenie pri kompilácii','Kompilačná chyba','Runtime výnimka'],answer:[2]},
+{type:'single',topic:'P2',q:'Čo je Method Overriding?',options:['Definovanie viacerých metód s rovnakým názvom ale inými parametrami','Zmena implementácie zdedenej metódy v podtriede s rovnakou signatúrou','Volanie metódy rodiča pomocou super','Označenie metódy ako final'],answer:[1]},
+{type:'single',topic:'P2',q:'Overriding je príklad akého polymorfizmu?',options:['Compile-time polymorfizmu','Runtime (dynamického) polymorfizmu','Statického polymorfizmu','Compile-time aj Runtime polymorfizmu'],answer:[1]},
+{type:'single',topic:'P2',q:'Overloading je príklad akého polymorfizmu?',options:['Runtime polymorfizmu','Dynamického polymorfizmu','Compile-time polymorfizmu','Žiadneho polymorfizmu'],answer:[2]},
+{type:'single',topic:'P2',q:'Na čo slúži anotácia `@Override`?',options:['Na vytvorenie novej metódy','Na označenie, že metóda prepisuje metódu rodičovskej triedy; kompilátor overí správnosť','Na zabránenie dedeniu','Na označenie abstraktnej metódy'],answer:[1]},
+{type:'single',topic:'P2',q:'Metóda toString() triedy Object štandardne vracia:',options:['Len názov triedy','Prázdny reťazec','Názov triedy a hash kód objektu v hexadecimálnom formáte','Hodnoty všetkých atribútov'],answer:[2]},
+{type:'single',topic:'P2',q:'V akom poradí sa vykonávajú konštruktory pri dedení?',options:['Od podtriedy k nadtriede','Od nadtriedy k podtriede (zhora nadol)','V ľubovoľnom poradí','Paralelne'],answer:[1]},
+{type:'single',topic:'P2',q:'Čo je abstraktná trieda?',options:['Trieda bez atribútov','Trieda, ktorá nemôže byť inštanciovaná a môže obsahovať abstraktné aj konkrétne metódy','Trieda len so statickými metódami','Trieda bez konštruktora'],answer:[1]},
+{type:'single',topic:'P2',q:'Čo platí pre `final class`?',options:['Od nej nemožno vytvoriť objekty','Od nej nemožno dediť','Nemôže implementovať interface','Nemôže mať metódy'],answer:[1]},
+{type:'single',topic:'P2',q:'Čo je upcasting?',options:['Pretypovanie objektu na typ podtriedy','Pretypovanie objektu na typ nadtriedy (rodičovský typ)','Konverzia primitívneho typu na wrapper','Implicitná konverzia čísiel'],answer:[1]},
+{type:'single',topic:'P2',q:'Čo je downcasting?',options:['Pretypovanie na typ rodičovskej triedy','Pretypovanie z nadtriedy na typ podtriedy','Automatická konverzia primitívov','Pretypovanie na interface'],answer:[1]},
+{type:'single',topic:'P2',q:'Na čo slúži operátor `instanceof`?',options:['Na vytvorenie inštancie triedy','Na overenie, či objekt je inštanciou danej triedy alebo jej podtried','Na porovnanie dvoch objektov','Na volanie konštruktora'],answer:[1]},
+{type:'single',topic:'P2',q:'Koľko interfacov môže trieda v Jave implementovať?',options:['Maximálne 1','Maximálne 2','Maximálne 5','Neobmedzene veľa'],answer:[3]},
+{type:'single',topic:'P2',q:'Čo je hlavný rozdiel medzi interface a abstraktnou triedou?',options:['Interface nemôže mať žiadne metódy','Interface nemôže mať stav (atribúty), abstraktná trieda môže; trieda môže implementovať viac interfacov ale dediť len od jednej triedy','Abstraktná trieda nemôže mať konštruktor','Nie je žiadny rozdiel'],answer:[1]},
+{type:'single',topic:'P2',q:'Môže mať abstraktná trieda neabstraktné (konkrétne) metódy?',options:['Nie, všetky metódy musia byť abstraktné','Áno, môže mať aj konkrétne metódy s implementáciou','Len ak implementuje interface','Len statické metódy'],answer:[1]},
+{type:'single',topic:'P2',q:'Čo sa stane, ak podtrieda neimplementuje všetky abstraktné metódy rodiča?',options:['Nič, metódy budú prázdne','Kompilačná chyba – podtrieda musí byť tiež deklarovaná ako abstraktná','Runtime error pri prvom volaní','Automaticky sa použije prázdna implementácia'],answer:[1]},
+{type:'single',topic:'P2',q:'Čo robí `super()` v konštruktore podtriedy?',options:['Volá statickú metódu nadtriedy','Volá konštruktor nadtriedy','Vytvára novú inštanciu nadtriedy','Ruší dedičnosť'],answer:[1]},
+{type:'single',topic:'P2',q:'Čo je constructor chaining?',options:['Reťazenie objektov v kolekcii','Volanie jedného konštruktora z iného pomocou this() alebo super()','Automatické volanie konštruktorov','Vytváranie viacerých inštancií naraz'],answer:[1]},
+{type:'multi',topic:'P2',q:'Ktoré tvrdenia o `final` kľúčovom slove sú správne? (vyber všetky správne)',options:['final trieda nemôže byť rozšírená (dedená)','final metóda nemôže byť overridnutá v podtriede','final premenná nemôže byť zmenená po inicializácii','final trieda nemôže mať žiadne metódy','final atribút musí byť vždy static'],answer:[0,1,2]},
+{type:'multi',topic:'P2',q:'Ktoré metódy sú definované priamo v triede `Object`? (vyber všetky správne)',options:['toString()','equals()','hashCode()','main()','size()','getClass()'],answer:[0,1,2,5]},
+{type:'single',topic:'P2',q:'Akú metódu musíme overridnúť, aby `System.out.println(obj)` vypísal zmysluplný text?',options:['print()','display()','toString()','show()'],answer:[2]},
+{type:'fill',topic:'P2',q:'Doplň: Abstraktná metóda sa deklaruje kľúčovým slovom ___.',answer:['abstract'],hint:'Anglický výraz'},
+{type:'fill',topic:'P2',q:'Doplň: Na zabránenie overridingu metódy použijeme kľúčové slovo ___.',answer:['final'],hint:'5 písmen'},
+{type:'fill',topic:'P2',q:'Doplň: Trieda implementuje interface pomocou kľúčového slova ___.',answer:['implements'],hint:'Anglické slovo'},
+{type:'order',topic:'P2',q:'Zoraď volanie konštruktorov pri vytváraní objektu podtriedy (od prvého po posledný):',items:['Konštruktor triedy Object','Konštruktor rodičovskej triedy','Konštruktor podtriedy (potomka)'],answer:[0,1,2]},
+{type:'match',topic:'P2',q:'Spáruj pojem s vysvetlením:',pairs:[{left:'Overloading',right:'Rovnaký názov metódy, iné parametre'},{left:'Overriding',right:'Prepísanie metódy v podtriede'},{left:'Upcasting',right:'Pretypovanie na rodičovský typ'},{left:'Downcasting',right:'Pretypovanie na typ podtriedy'}]},
+{type:'single',topic:'P2',q:'Čo je polymorfizmus?',options:['Schopnosť triedy mať viacero atribútov','Schopnosť objektu správať sa rôzne v závislosti od skutočného typu; dynamické viazanie metód','Schopnosť vytvárať viacero konštruktorov','Schopnosť skryť implementáciu'],answer:[1]},
+{type:'single',topic:'P2',q:'Liskov Substitution Principle (LSP) hovorí, že:',options:['Podtriedy môžu robiť čokoľvek','Podtriedy musia byť zameniteľné za nadtriedy bez narušenia správnosti programu','Triedy nemajú dediť od Object','Každá trieda musí mať interface'],answer:[1]},
+{type:'single',topic:'P2',q:'Čo je to Dynamic Binding (dynamické viazanie)?',options:['Väzba premenných pri kompilácii','Rozhodnutie o tom, ktorá metóda sa zavolá, nastáva za behu programu (runtime)','Statická väzba pri overloadingu','Väzba v čase načítania tried'],answer:[1]},
+{type:'single',topic:'P2',q:'Aký je rozdiel medzi == a equals() ak metóda equals() v triede nie je prepísaná?',options:['== porovnáva obsah, equals() referencie','equals() porovnáva podrobne atribúty','Správajú sa identicky – obe porovnávajú referencie','== nefunguje pre objekty'],answer:[2]},
+{type:'single',topic:'P2',q:'Čo je kompozícia vs. dedičnosť?',options:['Sú to synonymy','Kompozícia: trieda obsahuje iný objekt (has-a); dedičnosť: trieda rozširuje inú triedu (is-a)','Kompozícia je slabšia forma dedičnosti','Dedičnosť nahrádza kompozíciu'],answer:[1]},
+{type:'single',topic:'P2',q:'Prečo sa v Jave preferuje kompozícia pred dedičnosťou?',options:['Kompozícia je rýchlejšia','Kompozícia dáva väčšiu flexibilitu a nižší coupling (voľnejšiu väzbu)','Dedičnosť je zakázaná v novom Java','Kompozícia je jednoduchšia na zápis'],answer:[1]},
+{type:'fill',topic:'P2',q:'Doplň: Na volanie konštruktora rodičovskej triedy z podtriedy použijeme kľúčové slovo ___().',answer:['super'],hint:'Kľúčové slovo pre rodičovskú triedu'},
+{type:'single',topic:'P2',q:'Ktoré kľúčové slovo sa používa na dedenie v Jave?',options:['implements','inherits','extends','derives'],answer:[2]},
+{type:'single',topic:'P2',q:'Čo je default metóda v interface (od Java 8)?',options:['Metóda bez implementácie','Metóda s konkrétnou implementáciou priamo v interface','Súkromná metóda interface','Abstraktná metóda s prázdnym telom'],answer:[1]},
+{type:'multi',topic:'P2',q:'Ktoré tvrdenia o abstraktnej triede sú správne? (vyber všetky správne)',options:['Nemožno z nej vytvoriť inštanciu priamo','Môže mať abstraktné aj konkrétne metódy','Môže mať konštruktor','Trieda môže dediť od viacerých abstraktných tried','Musí mať aspoň jednu abstraktnú metódu'],answer:[0,1,2]},
+{type:'single',topic:'P2',q:'Čo je `instanceof` operátor?',options:['Vytvára novú inštanciu','Overuje, či objekt je inštanciou danej triedy alebo jej podtried','Porovnáva dva objekty','Vracia typ premennej'],answer:[1]},
+{type:'match',topic:'P2',q:'Spáruj typ polymorfizmu s mechanizmom:',pairs:[{left:'Compile-time polymorfizmus',right:'Method Overloading'},{left:'Runtime polymorfizmus',right:'Method Overriding + Dynamic Binding'}]},
+{type:'single',topic:'P2',q:'Čo je "Circular Dependency" v kontexte tried?',options:['Trieda závisí sama na sebe','Dve alebo viac tried závisí navzájom jedna na druhej','Jednosmerná závislosť medzi triedami','Triedy bez závislostí'],answer:[1]},
+{type:'single',topic:'P2',q:'Dovoľuje Java circular dependency medzi triedami?',options:['Nie, je to kompilačná chyba','Áno, Java to dovoľuje, ale je to zlá prax','Áno, a je to odporúčaný postup','Len ak sú v rovnakom balíku'],answer:[1]},
+
+// ===== P3 – Kompozícia, vzory (Observer, Singleton, Strategy, Decorator), Liskov, toString, instanceof (~40) =====
+{type:'single',topic:'P3',q:'Čo je Singleton návrhový vzor?',options:['Trieda, ktorá môže mať neobmedzený počet inštancií','Trieda, ktorá zaručuje existenciu presne jednej inštancie a poskytuje globálny prístup k nej','Trieda bez inštancií','Trieda, ktorá dedí od dvoch rodičov'],answer:[1]},
+{type:'single',topic:'P3',q:'Ako Singleton typicky zabezpečí, že vznikne len jedna inštancia?',options:['Pomocou abstract kľúčového slova','Private konštruktor + statická metóda getInstance()','Final trieda bez konštruktora','Protected konštruktor a statická premenná'],answer:[1]},
+{type:'single',topic:'P3',q:'Čo je Observer návrhový vzor?',options:['Vzor kde sa vytvárajú komplexné objekty krok za krokom','Vzor kde Subject (predmet) automaticky notifikuje zaregistrovaných Observerov o zmenách stavu','Vzor pre výmenu algoritmov za behu','Vzor pre zabalenie objektu do iného'],answer:[1]},
+{type:'single',topic:'P3',q:'Observer pattern patrí medzi:',options:['Creational (tvoriacé) vzory','Structural (štrukturálne) vzory','Behavioral (behaviorálne) vzory','Architectural (architekturálne) vzory'],answer:[2]},
+{type:'single',topic:'P3',q:'Čo je Strategy návrhový vzor?',options:['Vzor pre vytvorenie jednej inštancie','Vzor pre notifikáciu o zmenách','Vzor umožňujúci výmenu rodiny algoritmov (stratégií) za behu programu','Vzor pre zabalenie objektu'],answer:[2]},
+{type:'single',topic:'P3',q:'Čo je Decorator návrhový vzor?',options:['Vzor na vytvorenie jednej inštancie','Vzor na dynamické pridávanie nového správania/funkcionality objektom pomocou wrappingu','Vzor na notifikáciu observerov','Vzor na výmenu algoritmov'],answer:[1]},
+{type:'single',topic:'P3',q:'Aký je hlavný účel návrhového vzoru Decorator?',options:['Garantovať jednu inštanciu','Pridať nové správanie objektu pomocou wrapping – bez zmeny pôvodnej triedy','Notifikovať pozorovateľov','Vymieňať stratégie za behu'],answer:[1]},
+{type:'single',topic:'P3',q:'Singleton pattern patrí medzi:',options:['Behavioral vzory','Structural vzory','Creational (tvoriacé) vzory','Concurrency vzory'],answer:[2]},
+{type:'single',topic:'P3',q:'Strategy pattern patrí medzi:',options:['Creational vzory','Structural vzory','Behavioral vzory','Architectural vzory'],answer:[2]},
+{type:'single',topic:'P3',q:'Decorator pattern patrí medzi:',options:['Creational vzory','Structural vzory','Behavioral vzory','Concurrency vzory'],answer:[1]},
+{type:'single',topic:'P3',q:'V Observer patterne, kto vysiela notifikácie?',options:['Observer (pozorovateľ)','Subject (predmet pozorovaný)','Singleton','Strategy'],answer:[1]},
+{type:'single',topic:'P3',q:'Čo je Liskov Substitution Principle (LSP)?',options:['Triedy by nemali dediť','Podtriedy musia byť zameniteľné za nadtriedy bez narušenia správnosti programu','Každá trieda musí mať toString()','Interface je lepší ako abstraktná trieda'],answer:[1]},
+{type:'single',topic:'P3',q:'Metóda toString() triedy Object vracia štandardne:',options:['Len názov triedy','Prázdny reťazec ""','Názov triedy a hexadecimálny hash kód objektu','Hodnoty všetkých atribútov'],answer:[2]},
+{type:'single',topic:'P3',q:'Prečo je užitočné prepísať (override) metódu toString()?',options:['Kvôli výkonu','Aby System.out.println(obj) vypísal zmysluplnú informáciu o objekte','Je to povinné','Kvôli serializácii'],answer:[1]},
+{type:'single',topic:'P3',q:'Čo sa stane pri vykonaní: `Object a = "Hello"; if (a instanceof String)`?',options:['Kompilačná chyba','NullPointerException','Podmienka je true – "Hello" je inštanciou String','Podmienka je false'],answer:[2]},
+{type:'single',topic:'P3',q:'Čo je to Dynamic Binding (dynamické viazanie)?',options:['Väzba premenných pri kompilácii','Výber implementácie metódy za behu programu podľa skutočného typu objektu','Statická väzba pri overloadingu','Väzba pri načítaní triedy'],answer:[1]},
+{type:'fill',topic:'P3',q:'Doplň: Vzťah "has-a" (vlastní) v OOP sa nazýva ___.',answer:['kompozícia','Kompozícia','composition'],hint:'Alternatíva k dedičnosti'},
+{type:'fill',topic:'P3',q:'Doplň: Na deklaráciu interfacu v Jave použijeme kľúčové slovo ___.',answer:['interface'],hint:'Anglické slovo'},
+{type:'fill',topic:'P3',q:'Doplň: Vzor, kde existuje presne jedna inštancia triedy, sa nazýva ___.',answer:['Singleton','singleton'],hint:'Anglické slovo'},
+{type:'match',topic:'P3',q:'Spáruj návrhový vzor s popisom:',pairs:[{left:'Observer',right:'Notifikácia o zmenách stavu'},{left:'Strategy',right:'Výmena algoritmov za behu'},{left:'Singleton',right:'Jedna inštancia triedy'},{left:'Decorator',right:'Pridanie správania pomocou wrappingu'}]},
+{type:'single',topic:'P3',q:'Čo je asociácia v OOP?',options:['Vzťah dedenia (is-a)','Všeobecný vzťah medzi dvoma triedami, kde jedna pozná druhú','Implementácia interfacu','Typ polymorfizmu'],answer:[1]},
+{type:'single',topic:'P3',q:'Čo je agregácia?',options:['Silná väzba – časť nemôže existovať bez celku','Slabá väzba – časti môžu existovať nezávisle od celku (has-a)','Druh dedenia','Implementácia interfacu'],answer:[1]},
+{type:'single',topic:'P3',q:'Aký je rozdiel medzi agregáciou a kompozíciou?',options:['Nie je žiadny rozdiel','Kompozícia je silnejšia väzba – časti neexistujú bez celku; agregácia je slabšia','Agregácia je silnejšia','Sú to synonymy dedičnosti'],answer:[1]},
+{type:'order',topic:'P3',q:'Zoraď vzťahy od najslabšieho po najsilnejší:',items:['Asociácia','Agregácia','Kompozícia'],answer:[0,1,2]},
+{type:'multi',topic:'P3',q:'Ktoré tvrdenia o interfacoch v Jave 8+ sú správne? (vyber všetky správne)',options:['Všetky metódy sú implicitne public','Môžu obsahovať default metódy s implementáciou','Môžu mať konštruktor','Premenné sú implicitne public static final','Môžu byť priamo inštanciované'],answer:[0,1,3]},
+{type:'single',topic:'P3',q:'Čo je "návrhový vzor" (design pattern)?',options:['Hotový kód na priame použitie','Overené riešenie na opakovane sa vyskytujúci problém v návrhu softvéru','Druh programovacieho jazyka','Testovacia metodológia'],answer:[1]},
+{type:'single',topic:'P3',q:'Aký je vzťah Swing event mechanizmu a návrhových vzorov?',options:['Používa Singleton','Používa Observer pattern (listenery sledujú komponenty)','Používa Strategy','Používa Decorator'],answer:[1]},
+{type:'match',topic:'P3',q:'Spáruj UML vzťah so symbolom:',pairs:[{left:'Dedičnosť',right:'Plná šípka s prázdnym trojuholníkom'},{left:'Implementácia',right:'Prerušovaná šípka s trojuholníkom'},{left:'Kompozícia',right:'Plný diamant'},{left:'Agregácia',right:'Prázdny diamant'}]},
+{type:'single',topic:'P3',q:'V Strategy patterne, čo reprezentuje interface Strategy?',options:['Konkrétny algoritmus','Spoločné rozhranie pre rôzne vymeniteľné algoritmy','Kontext, ktorý používa stratégiu','Singleton inštanciu'],answer:[1]},
+{type:'single',topic:'P3',q:'Čo je "circular dependency" a prečo je problematická?',options:['Nie je to problém, Java ju podporuje plne','Vzniká, keď triedy navzájom závisia jedna na druhej, čo sťažuje testovanie a refaktoring','Je to chyba, ktorú Java neumožňuje','Je to výhoda v tímovom vývoji'],answer:[1]},
+{type:'single',topic:'P3',q:'Čo je "coupling" (previazanosť) v OOP?',options:['Počet metód v triede','Miera závislosti medzi triedami – nízky coupling je žiadúci','Počet atribútov v triede','Stupeň enkapsulácie'],answer:[1]},
+{type:'single',topic:'P3',q:'Čo je "cohesion" (súdržnosť) v OOP?',options:['Miera závislosti medzi triedami','Miera, do akej trieda robí jednu dobre definovanú vec – vysoká kohéznosť je žiadúca','Počet väzieb na iné triedy','Typ modifikátora prístupu'],answer:[1]},
+{type:'single',topic:'P3',q:'Prečo Java nedovoľuje viacnásobnú dedičnosť tried (multiple inheritance)?',options:['Java to technicky nevie','Kvôli Diamond problému – nejednoznačnosť pri dedení rovnakej metódy z viacerých tried','Kvôli výkonu','Kvôli bezpečnosti'],answer:[1]},
+
+// ===== P4 – Refactoring, antivzory, Stack/Heap, GC, Exceptions, Collections, Generics, Clean Code, TDD (~40) =====
+{type:'single',topic:'P4',q:'Čo je antivzor (anti-pattern)?',options:['Dobrá programátorská prax','Bežne sa vyskytujúce zlé riešenie problému, ktoré vyzerá rozumne, ale prináša problémy','Typ návrhového vzoru','Druh testovania'],answer:[1]},
+{type:'single',topic:'P4',q:'Trieda, ktorá robí príliš veľa vecí (má príliš veľa zodpovedností), sa nazýva:',options:['Observer Class','Singleton Class','God Class / Large Class','Strategy Class'],answer:[2]},
+{type:'single',topic:'P4',q:'Čo je "Dead Code"?',options:['Kód, ktorý beží nekonečne v cykle','Kód, ktorý sa nikdy nevykoná a je zbytočný v projekte','Kód s veľa chybami','Kód bez komentárov'],answer:[1]},
+{type:'single',topic:'P4',q:'Kde sú v Jave uložené lokálne premenné?',options:['Na Heape','V statickej pamäti','Na Stacku','V registroch procesora'],answer:[2]},
+{type:'single',topic:'P4',q:'Kde sú v Jave uložené inštancie objektov?',options:['Na Stacku','V statickej pamäti','V cache','Na Heape'],answer:[3]},
+{type:'single',topic:'P4',q:'Čo robí Garbage Collector (GC) v Jave?',options:['Kompiluje zdrojový kód','Automaticky uvoľňuje pamäť (heap) pre objekty, na ktoré neexistuje žiadna referencia','Optimalizuje výkon CPU','Spravuje vlákna'],answer:[1]},
+{type:'single',topic:'P4',q:'Kedy sa spúšťa blok `finally`?',options:['Len ak nastane výnimka','Len ak nenastane výnimka','Vždy, bez ohľadu na to, či nastala výnimka alebo nie','Nikdy sa nespúšťa automaticky'],answer:[2]},
+{type:'single',topic:'P4',q:'Aký je rozdiel medzi Checked a Unchecked výnimkami?',options:['Checked sú rýchlejšie','Checked výnimky musí programátor ošetriť (try-catch alebo throws) – kompilátor to kontroluje; Unchecked nie','Unchecked musia byť vždy zachytené','Nie je žiadny rozdiel'],answer:[1]},
+{type:'single',topic:'P4',q:'`RuntimeException` je:',options:['Checked exception','Unchecked exception','Error','Compile-time exception'],answer:[1]},
+{type:'single',topic:'P4',q:'Aký je rozdiel medzi `throw` a `throws`?',options:['throw deklaruje výnimku, throws ju vyhodí','throw vyhodí výnimku (v tele metódy), throws deklaruje ju v signatúre metódy','Sú to synonymá','throw je pre checked, throws pre unchecked'],answer:[1]},
+{type:'single',topic:'P4',q:'Čo je TDD (Test Driven Development)?',options:['Testovanie kódu po jeho napísaní','Metodológia, kde sa najprv píšu testy (ktoré zlyhajú), potom kód, ktorý ich splní, potom refaktoring','Testovanie len GUI','Automatizované nasadenie kódu'],answer:[1]},
+{type:'single',topic:'P4',q:'Čo znamená skratka TDD?',options:['Test Driven Design','Test Driven Development','Technical Debt Debugging','Test Data Definition'],answer:[1]},
+{type:'single',topic:'P4',q:'Kto by mal písať unit testy?',options:['Len QA tester','Programátor, ktorý implementuje funkcionalitu','Len manažér projektu','Automatizovaný nástroj'],answer:[1]},
+{type:'single',topic:'P4',q:'Čo je refactoring?',options:['Pridávanie nových funkcií do aplikácie','Zmena štruktúry/čistoty kódu bez zmeny jeho vonkajšieho správania','Oprava chýb (bugov)','Písanie testov'],answer:[1]},
+{type:'single',topic:'P4',q:'Aký je hlavný cieľ refaktoringu?',options:['Pridať nové funkcie','Zrýchliť kompilačný čas','Odstrániť technický dlh, zlepšiť čistotu a udržateľnosť kódu bez zmeny správania','Zlepšiť GUI'],answer:[2]},
+{type:'single',topic:'P4',q:'Čo znamená princíp DRY?',options:["Don't Run Yourself","Don't Repeat Yourself","Define Reuse Yourself","Design Repeatable Yields"],answer:[1]},
+{type:'single',topic:'P4',q:'Čo je "Inappropriate Intimacy" anti-pattern?',options:['Trieda, ktorá je príliš dlhá','Triedy, ktoré príliš závisia na vnútorných detailoch iných tried','Metóda s príliš veľa parametrami','Kód bez komentárov'],answer:[1]},
+{type:'single',topic:'P4',q:'Čo je Open-Closed Principle?',options:['Kód by mal byť otvorený pre modifikáciu a uzavretý pre rozšírenie','Triedy by mali byť otvorené pre rozšírenie (dedenie), ale uzavreté pre modifikáciu (existujúci kód)','Všetky metódy musia byť public','Každá trieda musí byť v samostatnom súbore'],answer:[1]},
+{type:'single',topic:'P4',q:'Ktoré rozhranie reprezentuje usporiadaný zoznam v Java Collections?',options:['Set','Map','Queue','List'],answer:[3]},
+{type:'single',topic:'P4',q:'Aký je hlavný rozdiel medzi `List` a `Set`?',options:['List je rýchlejší','Set povoľuje duplicity, List nie','List povoľuje duplicitné prvky a zachováva poradie, Set nezachováva duplicity','Nie je žiadny rozdiel'],answer:[2]},
+{type:'single',topic:'P4',q:'Čo je `Map` v Java Collections?',options:['Usporiadaný zoznam prvkov','Množina unikátnych prvkov','Kolekcia párov kľúč-hodnota','Typ poľa (array)'],answer:[2]},
+{type:'single',topic:'P4',q:'Na čo slúžia Generics (<code>&lt;T&gt;</code>) v Jave?',options:['Na vytváranie generického kódu bez typov','Na zabezpečenie typovej bezpečnosti pri kompilácii – eliminuje potrebu pretypovanie','Na generovanie zdrojového kódu','Na generickú serializáciu'],answer:[1]},
+{type:'single',topic:'P4',q:'Čo znamená <code>&lt;T&gt;</code> v deklarácii generickej triedy?',options:['T je konkrétny typ Integer','T je parametrizovaný typ – placeholder pre ľubovoľný typ','T je vždy String','T je typ výnimky'],answer:[1]},
+{type:'fill',topic:'P4',q:'Doplň: `ArrayList` implementuje rozhranie ___.',answer:['List','list'],hint:'Rozhranie pre usporiadaný zoznam'},
+{type:'fill',topic:'P4',q:'Doplň: Custom checked exception trieda typicky rozširuje triedu ___.',answer:['Exception','exception'],hint:'Základná trieda pre checked výnimky'},
+{type:'fill',topic:'P4',q:'Doplň: Skratka TDD znamená Test ___ Development.',answer:['Driven','driven'],hint:'Anglické adjektívum'},
+{type:'multi',topic:'P4',q:'Ktoré z nasledujúcich sú Java kolekcie? (vyber všetky správne)',options:['ArrayList','HashMap','TreeSet','StringBuilder','LinkedList','HashSet'],answer:[0,1,2,4,5]},
+{type:'multi',topic:'P4',q:'Ktoré z nasledujúcich sú antivzory? (vyber všetky správne)',options:['God Class','Strategy','Dead Code','Duplicate Code','Observer','Inappropriate Intimacy'],answer:[0,2,3,5]},
+{type:'order',topic:'P4',q:'Zoraď bloky spracovania výnimiek v správnom poradí:',items:['try { ... }','catch (Exception e) { ... }','finally { ... }'],answer:[0,1,2]},
+{type:'match',topic:'P4',q:'Spáruj pamäťovú oblasť s tým, čo uchováva:',pairs:[{left:'Stack',right:'Volania metód a lokálne premenné'},{left:'Heap',right:'Všetky inštancie objektov'},{left:'Method Area',right:'Bytekód tried a statické premenné'}]},
+{type:'single',topic:'P4',q:'Čo je "Clean Code"?',options:['Kód bez komentárov','Kód, ktorý je čitateľný, zrozumiteľný, testovateľný a dobre udržateľný','Kód s veľa komentármi','Kód, ktorý je čo najkratší'],answer:[1]},
+{type:'single',topic:'P4',q:'Prečo chceme písať Clean Code?',options:['Je to povinné v Jave','Menšia chybovosť, jednoduchšia testovateľnosť, ľahšia údržba a spolupráca v tíme','Kvôli výkonu','Aby kód bol kratší'],answer:[1]},
+{type:'match',topic:'P4',q:'Spáruj kolekciu s jej vlastnosťou:',pairs:[{left:'ArrayList',right:'Usporiadaný, povoľuje duplicity'},{left:'HashSet',right:'Neusporiadaný, bez duplicít'},{left:'HashMap',right:'Páry kľúč-hodnota'},{left:'LinkedList',right:'Obojsmerný zoznam, efektívne vkladanie'}]},
+{type:'single',topic:'P4',q:'Čo je "Large Method" anti-pattern?',options:['Metóda s veľa parametrami','Príliš dlhá metóda, ktorá robí príliš veľa vecí (porušuje SRP)','Metóda, ktorá vracia veľký objekt','Verejná metóda bez dokumentácie'],answer:[1]},
+{type:'single',topic:'P4',q:'Single Responsibility Principle (SRP) hovorí, že:',options:['Každá metóda musí byť jednoduchá','Každá trieda by mala mať presne jeden dôvod na zmenu – jednu zodpovednosť','Každá trieda musí implementovať jeden interface','Singleton je najlepší vzor'],answer:[1]},
+
+// ===== P5 – Unit testing, AAA, JUnit, code coverage, GUI, Swing, MVC, lambda, inner classes, layouts (~40) =====
+{type:'single',topic:'P5',q:'Čo znamená skratka AAA v testovaní?',options:['Accept-Assign-Assert','Assert-Apply-Arrange','Arrange, Act, Assert','Apply-Analyze-Accept'],answer:[2]},
+{type:'single',topic:'P5',q:'Čo je fáza "Arrange" v AAA vzore?',options:['Volanie testovanej metódy','Overenie výsledku','Príprava testovacích dát a prostredia','Zápis výsledku do logu'],answer:[2]},
+{type:'single',topic:'P5',q:'Čo je fáza "Act" v AAA vzore?',options:['Príprava dát','Samotné zavolanie testovanej metódy/akcie','Overenie výsledku pomocou assert','Upratanie po teste'],answer:[1]},
+{type:'single',topic:'P5',q:'Čo je fáza "Assert" v AAA vzore?',options:['Príprava dát','Zavolanie metódy','Overenie, že výsledok odpovedá očakávaniu','Spustenie aplikácie'],answer:[2]},
+{type:'fill',topic:'P5',q:'Doplň: V AAA vzore, overenie výsledku je vo fáze ___.',answer:['Assert','assert'],hint:'Tretí krok AAA'},
+{type:'single',topic:'P5',q:'Čo je TDD cyklus (Red-Green-Refactor)?',options:['Napíš kód → Otestuj → Nasaď','Napíš test (RED – zlyhá) → Napíš kód (GREEN – prejde) → Refaktoruj','Otestuj → Napíš kód → Otestuj znovu','Navrhni → Implementuj → Testuj'],answer:[1]},
+{type:'single',topic:'P5',q:'Ktorý z nasledujúcich výrokov o Branch Coverage je správny?',options:['Stačí, ak sa každý riadok vykoná aspoň raz','Branch coverage vyžaduje, aby každá vetva (true aj false) každého rozhodovacieho bodu bola otestovaná','100% branch coverage garantuje bezchybný kód','Branch coverage je menej dôkladný ako line coverage'],answer:[1]},
+{type:'single',topic:'P5',q:'Má zmysel cieliť na 100% code coverage?',options:['Áno, vždy','Nie, 100% coverage neznamená otestovanie všetkých hraničných prípadov a môže byť nákladné','Áno, je to povinné','Len pre kritické systémy'],answer:[1]},
+{type:'single',topic:'P5',q:'Aký je rozdiel medzi line coverage a branch coverage?',options:['Nie je žiadny rozdiel','Line coverage meria, ktoré riadky boli vykonané; branch coverage meria, či boli otestované všetky vetvy (if/else)','Line coverage je presnejší','Branch coverage sleduje len riadky'],answer:[1]},
+{type:'single',topic:'P5',q:'Ktorý Layout Manager je predvolený pre JFrame (content pane)?',options:['FlowLayout','GridLayout','BoxLayout','BorderLayout'],answer:[3]},
+{type:'single',topic:'P5',q:'Aký návrhový vzor využíva Swing pre oddelenie dát a zobrazenia?',options:['Observer','Singleton','MVC (Model-View-Controller)','Strategy'],answer:[2]},
+{type:'single',topic:'P5',q:'Čo je Model v MVC architektúre?',options:['Vizuálna časť aplikácie','Dátová vrstva – uchováva a spravuje dáta aplikácie','Spracovanie vstupov od používateľa','Sieťová komunikácia'],answer:[1]},
+{type:'single',topic:'P5',q:'Čo je View v MVC architektúre?',options:['Dátová vrstva','Vizuálna prezentácia dát – zobrazenie pre používateľa','Spracovanie vstupov','Databázová vrstva'],answer:[1]},
+{type:'single',topic:'P5',q:'Čo je Controller v MVC architektúre?',options:['Databázová vrstva','Vizuálna vrstva','Vrstva spracovávajúca vstupy od používateľa a aktualizujúca Model','Sieťová vrstva'],answer:[2]},
+{type:'single',topic:'P5',q:'Lambda výraz môže byť priradený iba k typu, ktorý je označený ako ___ interface.',options:['Abstract','Static','Functional','Generic'],answer:[2]},
+{type:'single',topic:'P5',q:'Čo je Functional Interface (SAM interface)?',options:['Interface s viacerými abstraktnými metódami','Interface s presne jednou abstraktnou metódou (Single Abstract Method)','Interface bez metód (marker interface)','Abstraktná trieda s jednou metódou'],answer:[1]},
+{type:'single',topic:'P5',q:'Môže vnútorná trieda (Inner Class) pristupovať k privátnym atribútom vonkajšej triedy?',options:['Nie, to nie je možné','Len cez getter metódy','Áno, vnútorná trieda má priamy prístup k všetkým atribútom vonkajšej triedy vrátane private','Len ak je deklarovaná ako static'],answer:[2]},
+{type:'single',topic:'P5',q:'Aká je správna syntax pre vytvorenie inštancie vnútornej triedy mimo vonkajšej triedy?',options:['Inner i = new Inner();','new Outer.Inner();','Outer o = new Outer(); Inner i = o.new Inner();','Outer.Inner i = Outer.new Inner();'],answer:[2]},
+{type:'single',topic:'P5',q:'Aký je rozdiel medzi FlowLayout a BoxLayout?',options:['FlowLayout je rýchlejší','FlowLayout zalamuje komponenty do ďalšieho riadku; BoxLayout neukladá komponenty do ďalšieho riadku (len 1 os)','BoxLayout zalamuje, FlowLayout nie','Nie je žiadny rozdiel'],answer:[1]},
+{type:'single',topic:'P5',q:'Ktorý layout zalamuje komponenty zľava doprava?',options:['BorderLayout','BoxLayout','GridLayout','FlowLayout'],answer:[3]},
+{type:'single',topic:'P5',q:'Čo je lambda výraz v Jave?',options:['Nový primitívny dátový typ','Skrátený zápis anonymnej funkcie (implementácie functional interface)','Druh cyklu for','Typ výnimky'],answer:[1]},
+{type:'single',topic:'P5',q:'Aký zápis lambda výrazu je správny pre ActionListener s jedným parametrom?',options:['e => System.out.println(e)','lambda e: print(e)','[e] { System.out.println(e); }','e -> System.out.println(e)'],answer:[3]},
+{type:'single',topic:'P5',q:'Čo je anonymná trieda v Jave?',options:['Trieda s private modifikátorom','Trieda bez mena definovaná priamo na mieste použitia (inline)','Abstraktná trieda','Trieda v inom balíku'],answer:[1]},
+{type:'single',topic:'P5',q:'Čo je inner class (vnútorná trieda)?',options:['Trieda definovaná vnútri inej triedy','Trieda s private konštruktorom','Podtrieda','Abstraktná trieda'],answer:[0]},
+{type:'single',topic:'P5',q:'Čo je static nested class?',options:['Vnútorná trieda s prístupom k inštančným atribútom','Statická trieda definovaná vnútri inej triedy – nemá prístup k inštančným členov vonkajšej triedy','Trieda, ktorá nemôže byť inštanciovaná','Anonymná trieda'],answer:[1]},
+{type:'single',topic:'P5',q:'Ktorý listener sa používa na zachytenie kliknutia na JButton?',options:['MouseListener','KeyListener','ActionListener','ChangeListener'],answer:[2]},
+{type:'fill',topic:'P5',q:'Doplň: Hlavný testovací framework pre Javu je ___.',answer:['JUnit','junit','Junit'],hint:'Začína na J'},
+{type:'fill',topic:'P5',q:'Doplň: Lambda výraz môže byť priradený len k ___ interface.',answer:['Functional','functional','FunctionalInterface'],hint:'Typ interface s jednou abstraktnou metódou'},
+{type:'multi',topic:'P5',q:'Čo platí pre AAA pattern v unit testoch? (vyber všetky správne)',options:['Používa sa len pre unit testy','Má 3 logické časti: Arrange, Act, Assert','Pomáha organizovať a čítať testy','Je to povinný štandard v Jave','Zlepšuje čitateľnosť testov'],answer:[1,2,4]},
+{type:'match',topic:'P5',q:'Spáruj typ testu s popisom:',pairs:[{left:'Unit test',right:'Test izolovanej metódy/triedy'},{left:'Integračný test',right:'Test spolupráce viacerých modulov'},{left:'E2E test',right:'Test celej aplikácie od začiatku do konca'}]},
+{type:'order',topic:'P5',q:'Zoraď kroky TDD cyklu v správnom poradí:',items:['Napíš test, ktorý zlyhá (RED)','Napíš minimálny kód, aby test prešiel (GREEN)','Refaktoruj kód (REFACTOR)'],answer:[0,1,2]},
+{type:'single',topic:'P5',q:'Čo je "deterministic" (deterministický) test?',options:['Test, ktorý vždy trvá rovnako dlho','Test, ktorý pri rovnakých vstupoch vždy vracia rovnaký výsledok','Test, ktorý závisí od náhodnosti','Test bez assert blokov'],answer:[1]},
+{type:'single',topic:'P5',q:'Čo testuje assertEquals(expected, actual) v JUnit?',options:['Overuje, že objekt nie je null','Overuje, že dve hodnoty sú rovnaké','Overuje, že podmienka je true','Overuje výnimku'],answer:[1]},
+{type:'single',topic:'P5',q:'Prečo je dôležité oddeliť GUI od business logiky (Model od View)?',options:['Kvôli rýchlejšiemu GUI','Pre ľahšie testovanie business logiky, jednoduchšiu údržbu a možnosť meniť pohľady bez zmeny logiky','Kvôli krajšiemu dizajnu','Je to povinné v Jave'],answer:[1]},
+{type:'single',topic:'P5',q:'Čo je Mockito?',options:['Testovací framework (alternatíva JUnit)','Knižnica na vytváranie mock (falošných) objektov pre unit testy','Nástroj na meranie code coverage','Build nástroj'],answer:[1]},
+
+// ===== P6-P7 – BorderLayout, Composite, transient, serializácia, vlákna, EDT, SwingWorker, synchronized, deadlock, Streams, Optional =====
+{type:'multi',topic:'P6',q:'Aké má BorderLayout regióny? (vyber všetky správne)',options:['NORTH','SOUTH','EAST','WEST','CENTER','DIAGONAL','LINE_START','LINE_END','PAGE_START','PAGE_END'],answer:[0,1,2,3,4,6,7,8,9]},
+{type:'single',topic:'P6',q:'Ktorý návrhový vzor sa používa v Swingu na vnáranie komponentov (panel v paneli)?',options:['Observer','Singleton','Strategy','Composite'],answer:[3]},
+{type:'single',topic:'P6',q:'Čo je Composite návrhový vzor?',options:['Vzor pre jednu inštanciu','Vzor pre zostavenie objektov do stromovej štruktúry, kde sa s listmi aj kompozitmi zaobchádza uniformne','Vzor pre notifikáciu','Vzor pre serializáciu'],answer:[1]},
+{type:'single',topic:'P6',q:'Ktoré kľúčové slovo zabraňuje serializácii atribútu?',options:['static','final','volatile','transient'],answer:[3]},
+{type:'single',topic:'P6',q:'Čo sa stane s atribútom označeným `transient` pri serializácii?',options:['Serializuje sa ako null','Serializácia zlyhá','Atribút sa pri serializácii preskočí (neuloží sa)','Hodí sa výnimka'],answer:[2]},
+{type:'single',topic:'P6',q:'Ktoré rozhranie musí trieda implementovať pre serializáciu?',options:['Comparable','Iterable','Cloneable','Serializable'],answer:[3]},
+{type:'single',topic:'P6',q:'Čo sa ukladá pri serializácii objektu?',options:['Len primitívne atribúty','Len verejné atribúty','Celý objektový graf (objekt aj všetky referencované objekty)','Len názov triedy'],answer:[2]},
+{type:'single',topic:'P6',q:'Ktorá trieda sa používa na zápis serializovaného objektu do súboru?',options:['FileWriter','DataOutputStream','PrintWriter','ObjectOutputStream'],answer:[3]},
+{type:'single',topic:'P6',q:'Ktorá trieda sa používa na čítanie serializovaného objektu zo súboru?',options:['FileReader','DataInputStream','Scanner','ObjectInputStream'],answer:[3]},
+{type:'fill',topic:'P6',q:'Doplň: Kľúčové slovo zabraňujúce serializácii atribútu je ___.',answer:['transient'],hint:'Anglické adjektívum, nie final'},
+{type:'fill',topic:'P6',q:'Doplň: Rozhranie, ktoré musí trieda implementovať pre serializáciu, sa volá ___.',answer:['Serializable','serializable'],hint:'Anglické slovo, marker interface'},
+{type:'single',topic:'P7',q:'Čo je Deadlock?',options:['Vlákno, ktoré beží príliš dlho','Stav, keď dve alebo viac vlákien čakajú na seba navzájom na uvoľnenie zdrojov','Vlákno s nízkou prioritou','Chyba v sieťovom vlákne'],answer:[1]},
+{type:'single',topic:'P7',q:'Na čo slúži kľúčové slovo `synchronized`?',options:['Na vytvorenie nového vlákna','Na zabezpečenie, že v jednom čase môže metódu/blok vykonávať len jedno vlákno','Na zastavenie vlákna','Na serializáciu objektov'],answer:[1]},
+{type:'single',topic:'P7',q:'Čo robí `SwingUtilities.invokeLater()`?',options:['Spustí nové vlákno okamžite','Zaradí úlohu (Runnable) do fronty EDT (Event Dispatch Thread) na bezpečné vykonanie','Zastaví aktuálne vlákno','Serializuje GUI komponenty'],answer:[1]},
+{type:'single',topic:'P7',q:'Čo je EDT (Event Dispatch Thread) v Swing?',options:['Vlákno pre databázové operácie','Špeciálne vlákno v Swing, ktoré spracováva GUI udalosti a aktualizácie komponentov','Vlákno pre sieťovú komunikáciu','Hlavné vlákno main metódy'],answer:[1]},
+{type:'single',topic:'P7',q:'Čo je `SwingWorker`?',options:['Layout manager','Trieda na vykonávanie dlhotrvajúcich úloh na pozadí bez blokovania EDT','Event listener','Druh kolekcie'],answer:[1]},
+{type:'single',topic:'P7',q:'Aké sú dva základné spôsoby vytvárania vlákien v Jave?',options:['Extending Thread alebo Implementing Runnable','Extending Runnable alebo Implementing Thread','Pomocou Stream API','Pomocou Lambda a Generics'],answer:[0]},
+{type:'single',topic:'P7',q:'Čo je Java Streams API?',options:['API na prácu so sieťovými streammi','Funkcionálny spôsob spracovania a transformácie kolekcií dát','API na prácu so súbormi (I/O)','Druh vlákna pre paralelné spracovanie'],answer:[1]},
+{type:'multi',topic:'P7',q:'Ktoré sú platné Stream operácie v Jave? (vyber všetky správne)',options:['filter()','map()','reduce()','compile()','collect()','forEach()','distinct()','sorted()'],answer:[0,1,2,4,5,6,7]},
+{type:'single',topic:'P7',q:'Čo je terminálna operácia v Java Streams?',options:['Operácia, ktorá vracia nový Stream','Operácia, ktorá produkuje konečný výsledok a ukončuje stream pipeline','Operácia filter','Operácia map'],answer:[1]},
+{type:'single',topic:'P7',q:'Čo je medzikroková (intermediate) operácia v Java Streams?',options:['Operácia, ktorá produkuje výsledok','Operácia, ktorá vracia nový Stream a dá sa reťaziť s ďalšími operáciami','Operácia collect','Operácia forEach'],answer:[1]},
+{type:'single',topic:'P7',q:'Čo robí `filter()` v Streams?',options:['Transformuje každý prvok','Vyfiltruje prvky, ktoré nespĺňajú podmienku (predikát)','Agreguje prvky','Zoraďuje prvky'],answer:[1]},
+{type:'single',topic:'P7',q:'Čo robí `map()` v Streams?',options:['Filtruje prvky podľa podmienky','Transformuje každý prvok na inú hodnotu pomocou funkcie','Agreguje prvky na jednu hodnotu','Zbiera výsledky do kolekcie'],answer:[1]},
+{type:'single',topic:'P7',q:'Čo robí `distinct()` v Streams?',options:['Zoraďuje prvky','Obmedzí stream na n prvkov','Odstráni duplicitné prvky (vráti unikátne)','Vráti prvý prvok'],answer:[2]},
+{type:'single',topic:'P7',q:'Čo robí `sorted()` v Streams?',options:['Odstráni duplicity','Zoraďuje prvky streamu','Limituje počet prvkov','Preskočí prvé n prvkov'],answer:[1]},
+{type:'single',topic:'P7',q:'Čo je `Optional` v Jave?',options:['Typ kolekcie pre nepovinné prvky','Kontajner, ktorý môže obsahovať hodnotu alebo byť prázdny (nahrádza null)','Druh výnimky','Anotácia pre nepovinné parametre'],answer:[1]},
+{type:'single',topic:'P7',q:'Čo je serializácia objektu?',options:['Konverzia textu na číslo','Konverzia objektu na postupnosť bajtov pre uloženie alebo prenos','Vytváranie vlákien','Kompilácia bytekódu'],answer:[1]},
+{type:'fill',topic:'P7',q:'Doplň: Stream terminálna operácia na zber výsledkov do kolekcie je ___.',answer:['collect','Collect'],hint:'Anglické slovo'},
+{type:'fill',topic:'P7',q:'Doplň: Na spustenie vlákna sa volá metóda ___() na objekte Thread.',answer:['start'],hint:'Nie run()!'},
+{type:'fill',topic:'P7',q:'Doplň: Na zaradenie úlohy do EDT v Swing použijeme SwingUtilities.___().',answer:['invokeLater','invokelater'],hint:'invokeLater'},
+{type:'match',topic:'P7',q:'Spáruj Stream operáciu s funkciou:',pairs:[{left:'filter()',right:'Vyfiltruje prvky podľa podmienky'},{left:'map()',right:'Transformuje každý prvok'},{left:'collect()',right:'Zbiera výsledky do kolekcie'},{left:'distinct()',right:'Odstráni duplicitné prvky'}]},
+{type:'match',topic:'P7',q:'Spáruj Swing/vlákno koncept s popisom:',pairs:[{left:'EDT',right:'GUI vlákno v Swing'},{left:'SwingWorker',right:'Pozaďová úloha bez blokovania GUI'},{left:'invokeLater()',right:'Bezpečné spustenie kódu na EDT'},{left:'synchronized',right:'Ochrana pred súčasným prístupom viacerých vlákien'}]},
+{type:'order',topic:'P7',q:'Zoraď typický Stream pipeline v správnom poradí:',items:['Získaj stream z kolekcie (.stream())','Aplikuj medzikrokové operácie (filter, map, distinct, sorted)','Zavolaj terminálnu operáciu (collect, forEach, reduce)'],answer:[0,1,2]},
+{type:'single',topic:'P7',q:'Čo je `parallelStream()` v Jave?',options:['Sekvenčný stream','Stream, ktorý využíva viacero vlákien pre paralelné spracovanie prvkov','Stream pre GUI komponenty','Stream pre serializáciu'],answer:[1]},
+{type:'single',topic:'P7',q:'Čo je lazy evaluation (lenivé vyhodnocovanie) v kontexte Streams?',options:['Streamy sa vyhodnocujú ihneď pri definícii','Medzikrokové operácie sa nevykonajú, kým nie je zavolaná terminálna operácia','Streamy sa vždy vykonávajú paralelne','Streamy sa cache-ujú automaticky'],answer:[1]},
+{type:'single',topic:'P7',q:'Čo robí `reduce()` v Streams?',options:['Filtruje prvky','Transformuje prvky','Agreguje prvky na jednu hodnotu pomocou binárnej operácie','Zbiera do kolekcie'],answer:[2]},
+{type:'single',topic:'P7',q:'Aký vzor sa používa pre komunikáciu View s Modelom v MVC (Swing)?',options:['Singleton','Strategy','Decorator','Observer – View sleduje zmeny v Modeli'],answer:[3]},
+{type:'single',topic:'P7',q:'Čo robí metóda `writeObject()` pri serializácii?',options:['Číta objekt zo súboru','Zapisuje serializovaný objekt do výstupného streamu','Overuje typ objektu','Vytvára kópiu objektu'],answer:[1]},
+{type:'single',topic:'P7',q:'Prečo oddeľovať Model od View v MVC?',options:['Kvôli rýchlejšiemu GUI rendrovaniu','Ľahšie testovanie Modelu, jednoduchšia údržba, možnosť vymeniť View bez zmeny logiky','Je to povinné v Jave','Kvôli lepšej serializácii'],answer:[1]},
+
+// ===== DOPLNENÉ – chýbajúce otázky z formy =====
+// God Class
+{type:'single',topic:'P4',q:'Ktorý z nasledujúcich pojmov označuje situáciu, keď jedna trieda alebo metóda robí príliš veľa vecí (porušenie Single Responsibility)?',options:['Circular Dependency','God Class / Large Class','Inappropriate Intimacy','Dead Code'],answer:[1]},
+{type:'single',topic:'P4',q:'Čo je God Class (Large Class) ako antivzor?',options:['Trieda, ktorá je verejná a dostupná odkiaľkoľvek','Trieda, ktorá obsahuje príliš veľa zodpovedností a porušuje Single Responsibility Principle','Trieda bez konštruktora','Abstraktná trieda s mnohými podtriedami'],answer:[1]},
+// FlowLayout
+{type:'single',topic:'P5',q:'Ktorý Layout Manager ukladá komponenty zľava doprava a pri nedostatku miesta ich zalomí na nový riadok?',options:['BorderLayout','BoxLayout','FlowLayout','GridBagLayout'],answer:[2]},
+{type:'single',topic:'P5',q:'Ktorý Layout Manager je predvolený (default) pre JPanel?',options:['BorderLayout','BoxLayout','GridLayout','FlowLayout'],answer:[3]},
+// Anonymous class
+{type:'single',topic:'P5',q:'Čo je anonymná trieda (Anonymous Class) v Jave?',options:['Trieda bez názvu, ktorá sa definuje a inštancuje na mieste použitia','Trieda označená ako private','Vnútorná trieda s private konštruktorom','Abstraktná trieda bez metód'],answer:[0]},
+{type:'single',topic:'P5',q:'Aký je rozdiel medzi anonymnou triedou a lambda výrazom?',options:['Nie je žiadny rozdiel','Anonymná trieda môže implementovať ľubovoľné rozhranie (aj s viacerými metódami), lambda len Functional Interface','Lambda je staršia syntax ako anonymná trieda','Anonymná trieda sa dá použiť len v Swingu'],answer:[1]},
+{type:'single',topic:'P5',q:'Pozrite si kód: <code>new ActionListener() { public void actionPerformed(ActionEvent e) { ... } }</code> — o aký typ triedy ide?',options:['Vnútorná trieda (Inner Class)','Statická vnorená trieda','Anonymná trieda (Anonymous Class)','Lokálna trieda (Local Class)'],answer:[2]},
+];
+
+// ===================== QUIZ ENGINE =====================
+const QUIZ_SIZE = 30;
+let currentQuestions = [];
+let currentIndex = 0;
+let answers = []; // user answers per question: {answered:bool, correct:bool}
+let score = 0;
+let quizState = 'start'; // start, quiz, results
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickQuestions() {
+  const shuffled = shuffle(questions);
+  return shuffled.slice(0, QUIZ_SIZE).map(q => JSON.parse(JSON.stringify(q)));
+}
+
+function startQuiz(qs) {
+  currentQuestions = qs || pickQuestions();
+  currentIndex = 0;
+  answers = currentQuestions.map(() => ({ answered: false, correct: false }));
+  score = 0;
+  quizState = 'quiz';
+  render();
+}
+
+function restartSame() {
+  currentIndex = 0;
+  answers = currentQuestions.map(() => ({ answered: false, correct: false }));
+  score = 0;
+  quizState = 'quiz';
+  // Re-deep-copy for shuffle
+  currentQuestions = currentQuestions.map(q => {
+    const orig = questions.find(oq => oq.q === q.q);
+    return orig ? JSON.parse(JSON.stringify(orig)) : JSON.parse(JSON.stringify(q));
+  });
+  render();
+}
+
+// ===================== RENDERING =====================
+const app = document.getElementById('app');
+
+function render() {
+  if (quizState === 'start') renderStart();
+  else if (quizState === 'quiz') renderQuiz();
+  else if (quizState === 'results') renderResults();
+}
+
+function renderStart() {
+  app.innerHTML = `
+    <div class="start-screen">
+      <h1>OOP Zápočtový Quiz</h1>
+      <p>Otestuj svoje znalosti z objektovo-orientovaného programovania v Jave. 30 náhodných otázok zo 7 prednášok.</p>
+      <div class="stats">
+        <div class="stat-card"><div class="num">200</div><div class="label">Otázok v poole</div></div>
+        <div class="stat-card"><div class="num">30</div><div class="label">Otázok v teste</div></div>
+        <div class="stat-card"><div class="num">7</div><div class="label">Prednášok</div></div>
+        <div class="stat-card"><div class="num">5</div><div class="label">Typov otázok</div></div>
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()">Začať test</button>
+    </div>`;
+}
+
+function badgeClass(type) {
+  return {single:'badge-single',multi:'badge-multi',fill:'badge-fill',order:'badge-order',match:'badge-match'}[type]||'badge-single';
+}
+function badgeLabel(type) {
+  return {single:'1 správna',multi:'Viac správnych',fill:'Doplň',order:'Poradie',match:'Spáruj'}[type]||type;
+}
+function topicLabel(t) {
+  const m = {P1:'Prednáška 1',P2:'Prednáška 2',P3:'Prednáška 3',P4:'Prednáška 4',P5:'Prednáška 5',P6:'Prednáška 6',P7:'Prednáška 7'};
+  return m[t]||t;
+}
+
+function renderQuiz() {
+  const q = currentQuestions[currentIndex];
+  const pct = ((currentIndex) / QUIZ_SIZE * 100).toFixed(0);
+  const answered = answers[currentIndex].answered;
+
+  let questionHTML = '';
+  if (q.type === 'single' || q.type === 'multi') {
+    questionHTML = renderOptions(q, answered);
+  } else if (q.type === 'fill') {
+    questionHTML = renderFill(q, answered);
+  } else if (q.type === 'order') {
+    questionHTML = renderOrder(q, answered);
+  } else if (q.type === 'match') {
+    questionHTML = renderMatch(q, answered);
+  }
+
+  app.innerHTML = `
+    <div class="quiz-container">
+      <div class="quiz-header">
+        <span class="q-count">Otázka ${currentIndex + 1} / ${QUIZ_SIZE}</span>
+        <span class="score-display">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          ${score} bodov
+        </span>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
+      <div class="question-card" id="qcard">
+        <div class="badge-row">
+          <span class="badge ${badgeClass(q.type)}">${badgeLabel(q.type)}</span>
+          <span class="badge badge-topic">${topicLabel(q.topic)}</span>
+        </div>
+        <div class="question-text">${formatCode(q.q)}</div>
+        ${questionHTML}
+        <div id="feedback"></div>
+        ${answered ? `<div class="next-wrap"><button class="btn btn-primary btn-sm" onclick="nextQuestion()">${currentIndex < QUIZ_SIZE - 1 ? 'Ďalšia otázka →' : 'Zobraziť výsledky →'}</button></div>` : ''}
+      </div>
+    </div>
+    <div class="nav-dots" id="navdots">${renderDots()}</div>`;
+
+  // Initialize interactive question types
+  if (!answered) {
+    if (q.type === 'single' || q.type === 'multi') initOptions(q);
+    else if (q.type === 'fill') initFill(q);
+    else if (q.type === 'order') initOrder(q);
+    else if (q.type === 'match') initMatch(q);
+  }
+}
+
+function formatCode(text) {
+  return text.replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+function renderDots() {
+  return currentQuestions.map((_, i) => {
+    let cls = 'nav-dot';
+    if (i === currentIndex) cls += ' current';
+    else if (answers[i].answered && answers[i].correct) cls += ' correct-dot';
+    else if (answers[i].answered && !answers[i].correct) cls += ' incorrect-dot';
+    else cls += ' unanswered';
+    return `<button class="${cls}" onclick="goToQuestion(${i})" title="Otázka ${i+1}"></button>`;
+  }).join('');
+}
+
+function goToQuestion(i) {
+  if (i >= 0 && i < QUIZ_SIZE) {
+    const card = document.getElementById('qcard');
+    if (card) {
+      card.classList.add('exit');
+      setTimeout(() => { currentIndex = i; renderQuiz(); }, 200);
+    } else {
+      currentIndex = i;
+      renderQuiz();
+    }
+  }
+}
+
+function nextQuestion() {
+  if (currentIndex < QUIZ_SIZE - 1) {
+    const card = document.getElementById('qcard');
+    if (card) {
+      card.classList.add('exit');
+      setTimeout(() => { currentIndex++; renderQuiz(); }, 200);
+    } else {
+      currentIndex++;
+      renderQuiz();
+    }
+  } else {
+    quizState = 'results';
+    render();
+  }
+}
+
+// ===================== SINGLE / MULTI OPTIONS =====================
+function renderOptions(q, answered) {
+  // Shuffle options and remap answer indices
+  if (!q._shuffled) {
+    const origOptions = [...q.options];
+    const indices = origOptions.map((_, i) => i);
+    const shuffledIndices = shuffle(indices);
+    q._shuffledOptions = shuffledIndices.map(i => origOptions[i]);
+    q._shuffledAnswers = q.answer.map(a => shuffledIndices.indexOf(a));
+    q._shuffled = true;
+    q._selected = [];
+  }
+
+  const opts = q._shuffledOptions;
+  const isMulti = q.type === 'multi';
+
+  return `<ul class="options-list">${opts.map((opt, i) => {
+    let cls = 'option-btn';
+    if (answered) {
+      cls += ' disabled';
+      if (q._shuffledAnswers.includes(i)) cls += ' correct';
+      else if (q._selected.includes(i)) cls += ' incorrect';
+    } else if (q._selected && q._selected.includes(i)) {
+      cls += ' selected';
+    }
+    const marker = answered ? (q._shuffledAnswers.includes(i) ? '✓' : (q._selected.includes(i) ? '✗' : String.fromCharCode(65+i))) : (q._selected && q._selected.includes(i) ? '✓' : String.fromCharCode(65+i));
+    return `<li><button class="${cls}" data-idx="${i}"><span class="marker">${marker}</span><span class="option-text">${formatCode(opt)}</span></button></li>`;
+  }).join('')}</ul>
+  ${!answered && isMulti ? '<div style="margin-top:1rem"><button class="btn btn-primary btn-sm" id="confirmMulti">Potvrdiť odpoveď</button></div>' : ''}`;
+}
+
+function initOptions(q) {
+  const isMulti = q.type === 'multi';
+  document.querySelectorAll('.option-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (answers[currentIndex].answered) return;
+      const idx = parseInt(btn.dataset.idx);
+      if (isMulti) {
+        if (q._selected.includes(idx)) q._selected = q._selected.filter(x => x !== idx);
+        else q._selected.push(idx);
+        renderQuiz();
+      } else {
+        q._selected = [idx];
+        checkAnswer(q);
+      }
+    });
+  });
+  if (isMulti) {
+    const cb = document.getElementById('confirmMulti');
+    if (cb) cb.addEventListener('click', () => { if (q._selected.length > 0) checkAnswer(q); });
+  }
+}
+
+function checkAnswer(q) {
+  const correct = q._shuffledAnswers.sort().join(',') === q._selected.sort().join(',');
+  answers[currentIndex].answered = true;
+  answers[currentIndex].correct = correct;
+  if (correct) score++;
+  renderQuiz();
+  showFeedback(correct);
+}
+
+function showFeedback(correct) {
+  const fb = document.getElementById('feedback');
+  if (!fb) return;
+  const q = currentQuestions[currentIndex];
+  const qNum = q._poolIndex + 1;
+  const qText = q.q.replace(/<[^>]*>/g,'').slice(0,100);
+  const mailSubject = encodeURIComponent(`[OOP Quiz] Probl\u00e9m s ot\u00e1zkou #${qNum}`);
+  const mailBody = encodeURIComponent(`Ahoj,\n\nOt\u00e1zka #${qNum} (${q.topic}): ${qText}\n\nProbl\u00e9m: \n\n`);
+  const mailHref = `mailto:xpalencarm@stuba.sk?subject=${mailSubject}&body=${mailBody}`;
+  fb.innerHTML = `
+    <div class="feedback ${correct ? 'feedback-correct' : 'feedback-incorrect'}">${correct ? '\u2713 Spr\u00e1vne!' : '\u2717 Nespr\u00e1vne!'}</div>
+    <a class="report-btn" href="${mailHref}" target="_blank" rel="noopener">\u2709 Nahl\u00e1si\u0165 probl\u00e9m s ot\u00e1zkou #${qNum}</a>`;
+}
+
+// ===================== FILL =====================
+function renderFill(q, answered) {
+  if (answered && q._fillResult !== undefined) {
+    const cls = q._fillResult ? 'correct' : 'incorrect';
+    return `<div class="fill-input-wrap"><input class="fill-input ${cls}" value="${q._userFill || ''}" disabled></div>
+    ${!q._fillResult ? `<div class="fill-answer">Správna odpoveď: ${q.answer[0]}</div>` : ''}`;
+  }
+  return `<div class="fill-input-wrap"><input class="fill-input" id="fillInput" placeholder="Napíš odpoveď..." autocomplete="off">${q.hint ? `<div class="fill-hint">💡 ${q.hint}</div>` : ''}</div>
+  <button class="btn btn-primary btn-sm" id="confirmFill">Potvrdiť</button>`;
+}
+
+function initFill(q) {
+  const input = document.getElementById('fillInput');
+  const btn = document.getElementById('confirmFill');
+  if (!input || !btn) return;
+  input.focus();
+  const doCheck = () => {
+    const val = input.value.trim();
+    if (!val) return;
+    q._userFill = val;
+    const correct = q.answer.some(a => a.toLowerCase() === val.toLowerCase());
+    q._fillResult = correct;
+    answers[currentIndex].answered = true;
+    answers[currentIndex].correct = correct;
+    if (correct) score++;
+    renderQuiz();
+    showFeedback(correct);
+  };
+  btn.addEventListener('click', doCheck);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') doCheck(); });
+}
+
+// ===================== ORDER (Drag & Drop) =====================
+function renderOrder(q, answered) {
+  if (!q._currentOrder) {
+    q._currentOrder = shuffle(q.items.map((_, i) => i));
+  }
+  const order = q._currentOrder;
+  return `<ul class="order-list" id="orderList">${order.map((idx, pos) => {
+    let cls = 'order-item';
+    if (answered) {
+      cls += q.answer[pos] === idx ? ' correct' : ' incorrect';
+    }
+    return `<li class="${cls}" data-idx="${idx}" draggable="${!answered}"><span class="order-num">${pos + 1}</span><span>${formatCode(q.items[idx])}</span></li>`;
+  }).join('')}</ul>
+  ${!answered ? '<div style="margin-top:1rem"><button class="btn btn-primary btn-sm" id="confirmOrder">Potvrdiť poradie</button></div>' : ''}`;
+}
+
+function initOrder(q) {
+  const list = document.getElementById('orderList');
+  if (!list) return;
+  let dragIdx = null;
+
+  list.querySelectorAll('.order-item').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      dragIdx = [...list.children].indexOf(item);
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      const dropIdx = [...list.children].indexOf(item);
+      if (dragIdx !== null && dragIdx !== dropIdx) {
+        // Swap
+        const temp = q._currentOrder[dragIdx];
+        q._currentOrder[dragIdx] = q._currentOrder[dropIdx];
+        q._currentOrder[dropIdx] = temp;
+        renderQuiz();
+      }
+    });
+    // Touch support
+    let touchStartY = 0;
+    let touchEl = null;
+    item.addEventListener('touchstart', e => {
+      touchStartY = e.touches[0].clientY;
+      touchEl = item;
+      item.classList.add('dragging');
+    }, {passive:true});
+    item.addEventListener('touchmove', e => {
+      e.preventDefault();
+    }, {passive:false});
+    item.addEventListener('touchend', e => {
+      if (!touchEl) return;
+      touchEl.classList.remove('dragging');
+      const touchEndY = e.changedTouches[0].clientY;
+      const items = [...list.children];
+      const fromIdx = items.indexOf(touchEl);
+      let toIdx = fromIdx;
+      // Determine direction
+      if (touchEndY < touchStartY - 30 && fromIdx > 0) toIdx = fromIdx - 1;
+      else if (touchEndY > touchStartY + 30 && fromIdx < items.length - 1) toIdx = fromIdx + 1;
+      if (fromIdx !== toIdx) {
+        const temp = q._currentOrder[fromIdx];
+        q._currentOrder[fromIdx] = q._currentOrder[toIdx];
+        q._currentOrder[toIdx] = temp;
+        renderQuiz();
+      }
+      touchEl = null;
+    });
+  });
+
+  const btn = document.getElementById('confirmOrder');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const correct = q._currentOrder.every((idx, pos) => q.answer[pos] === idx);
+      answers[currentIndex].answered = true;
+      answers[currentIndex].correct = correct;
+      if (correct) score++;
+      renderQuiz();
+      showFeedback(correct);
+    });
+  }
+}
+
+// ===================== MATCH =====================
+function renderMatch(q, answered) {
+  if (!q._matchState) {
+    q._shuffledRight = shuffle(q.pairs.map((_, i) => i));
+    q._matched = {}; // leftIdx -> rightIdx (shuffled)
+    q._selectedLeft = null;
+    q._matchState = true;
+  }
+  const leftItems = q.pairs;
+  const rightOrder = q._shuffledRight;
+
+  let leftHTML = leftItems.map((p, i) => {
+    let cls = 'match-item';
+    const isMatched = q._matched[i] !== undefined;
+    if (isMatched) cls += ' matched';
+    else if (q._selectedLeft === i) cls += ' selected';
+    if (answered && !isMatched) cls += ' disabled';
+    return `<div class="${cls}" data-side="left" data-idx="${i}">${formatCode(p.left)}</div>`;
+  }).join('');
+
+  let rightHTML = rightOrder.map((origIdx, dispIdx) => {
+    let cls = 'match-item';
+    const isMatched = Object.values(q._matched).includes(dispIdx);
+    if (isMatched) cls += ' matched';
+    if (answered && !isMatched) cls += ' disabled';
+    return `<div class="${cls}" data-side="right" data-idx="${dispIdx}">${formatCode(q.pairs[origIdx].right)}</div>`;
+  }).join('');
+
+  const allMatched = Object.keys(q._matched).length === q.pairs.length;
+
+  return `<div class="match-container">
+    <div><div class="match-col-title">Pojem</div>${leftHTML}</div>
+    <div><div class="match-col-title">Popis</div>${rightHTML}</div>
+  </div>
+  ${!answered && allMatched ? '<div style="margin-top:1rem"><button class="btn btn-primary btn-sm" id="confirmMatch">Potvrdiť párovanie</button></div>' : ''}`;
+}
+
+function initMatch(q) {
+  document.querySelectorAll('.match-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (answers[currentIndex].answered) return;
+      const side = item.dataset.side;
+      const idx = parseInt(item.dataset.idx);
+
+      if (side === 'left') {
+        if (q._matched[idx] !== undefined) return;
+        q._selectedLeft = idx;
+        renderQuiz();
+      } else if (side === 'right') {
+        if (q._selectedLeft === null) return;
+        if (Object.values(q._matched).includes(idx)) return;
+        // Check if correct pair
+        const leftIdx = q._selectedLeft;
+        const rightOrigIdx = q._shuffledRight[idx];
+        if (leftIdx === rightOrigIdx) {
+          q._matched[leftIdx] = idx;
+          q._selectedLeft = null;
+          renderQuiz();
+          // Check if all matched
+          if (Object.keys(q._matched).length === q.pairs.length) {
+            // Auto show confirm
+            renderQuiz();
+          }
+        } else {
+          // Wrong match - briefly show red, keep left selected so user can try another right
+          item.classList.add('wrong');
+          setTimeout(() => {
+            item.classList.remove('wrong');
+          }, 600);
+          // Keep _selectedLeft so user can immediately try a different right item
+        }
+      }
+    });
+  });
+
+  const btn = document.getElementById('confirmMatch');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      // If all matched, they are all correct (matching is validated per-click)
+      const correct = Object.keys(q._matched).length === q.pairs.length;
+      answers[currentIndex].answered = true;
+      answers[currentIndex].correct = correct;
+      if (correct) score++;
+      renderQuiz();
+      showFeedback(correct);
+    });
+  }
+}
+
+// ===================== RESULTS =====================
+function renderResults() {
+  const pct = Math.round((score / QUIZ_SIZE) * 100);
+  let emoji = '😢';
+  let title = 'Skúsiaš to znova?';
+  if (pct >= 90) { emoji = '🏆'; title = 'Vynikajúco!'; }
+  else if (pct >= 75) { emoji = '😊'; title = 'Veľmi dobre!'; }
+  else if (pct >= 60) { emoji = '👍'; title = 'Dobre!'; }
+  else if (pct >= 40) { emoji = '😐'; title = 'Dá sa to lepšie'; }
+
+  const correctCount = answers.filter(a => a.correct).length;
+  const wrongCount = answers.filter(a => a.answered && !a.correct).length;
+
+  app.innerHTML = `
+    <div class="results-screen">
+      <div class="results-emoji">${emoji}</div>
+      <div class="results-title">${title}</div>
+      <div class="results-pct">${pct}%</div>
+      <div class="results-sub">${score} z ${QUIZ_SIZE} otázok správne</div>
+      <div class="results-breakdown">
+        <div class="rb-item"><div class="rb-num" style="color:var(--green)">${correctCount}</div><div class="rb-label">Správne</div></div>
+        <div class="rb-item"><div class="rb-num" style="color:var(--red)">${wrongCount}</div><div class="rb-label">Nesprávne</div></div>
+      </div>
+      <div class="results-actions">
+        <button class="btn btn-primary" onclick="startQuiz()">Nový test</button>
+        <button class="btn btn-secondary" onclick="restartSame()">Zopakovať rovnaký test</button>
+      </div>
+    </div>`;
+}
+
+// ===================== POOL INDEX =====================
+// Tag each question with its pool index for reporting
+questions.forEach((q, i) => q._poolIndex = i);
+
+// ===================== INIT =====================
+render();
+</script>
+<script data-pplx-inline-edit>
+(function(){
+  if(window===window.top)return;
+  function inlineAll(orig,clone){
+    if(orig.nodeType!==1)return;
+    try{
+      var cs=getComputedStyle(orig);
+      var t='';
+      for(var i=0;i<cs.length;i++){t+=cs[i]+':'+cs.getPropertyValue(cs[i])+';';}
+      clone.style.cssText=t;
+    }catch(e){}
+    var oc=orig.children,cc=clone.children;
+    for(var j=0;j<oc.length&&j<cc.length;j++){inlineAll(oc[j],cc[j]);}
+  }
+  function stripExternal(clone){
+    var imgs=clone.querySelectorAll('img');
+    for(var i=0;i<imgs.length;i++){
+      var s=imgs[i].getAttribute('src');
+      if(s&&!s.startsWith('data:'))imgs[i].removeAttribute('src');
+    }
+    var all=clone.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){
+      var st=all[i].style.cssText;
+      if(st&&st.indexOf('url(')>=0){
+        all[i].style.cssText=st.replace(/url\(["']?(?!data:)[^)"']*["']?\)/gi,'none');
+      }
+    }
+  }
+  window.addEventListener('message',function(e){
+    if(!e.data||e.data.type!=='INLINE_EDIT_CAPTURE_REQUEST')return;
+    var scrollX=window.scrollX||window.pageXOffset||0;
+    var scrollY=window.scrollY||window.pageYOffset||0;
+    var w=window.innerWidth,h=window.innerHeight;
+    try{
+      var clone=document.documentElement.cloneNode(true);
+      var rm=clone.querySelectorAll('script,link[rel="stylesheet"],style');
+      for(var i=0;i<rm.length;i++){rm[i].remove();}
+      inlineAll(document.documentElement,clone);
+      stripExternal(clone);
+      var html=new XMLSerializer().serializeToString(clone);
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'
+        +'<foreignObject width="100%" height="100%">'
+        +'<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+w+'px;height:'+h+'px;overflow:hidden">'
+        +'<div style="transform:translate(-'+scrollX+'px,-'+scrollY+'px);transform-origin:top left">'
+        +html+'</div></div></foreignObject></svg>';
+      var svgUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0);
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:c.toDataURL('image/png'),scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.onerror=function(){
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.src=svgUrl;
+    }catch(err){
+      window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+    }
+  });
+})();
+</script></body>
+</html>
