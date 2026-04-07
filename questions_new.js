@@ -366,4 +366,130 @@ const questions = [
 {type:'multi',topic:'P3',q:'Ktoré tvrdenia o Visitor patterne sú správne? (vyber všetky)',options:['Patrí medzi behavioral vzory','Používa double dispatch','Umožňuje pridávať nové operácie bez zmeny Elementov','Zaručuje jednu inštanciu triedy','Element má metódu accept(Visitor)'],answer:[0,1,2,4]},
 {type:'fill',topic:'P3',q:'Doplň: V Visitor patterne metóda na Elemente, ktorá prijíma Visitora, sa nazýva ___().',answer:['accept','Accept'],hint:'Anglické slovo pre „prijať"'},
 {type:'match',topic:'P3',q:'Spáruj Visitor koncept s popisom:',pairs:[{left:'Visitor interface',right:'Definuje visit() metódu pre každý typ Elementu'},{left:'ConcreteVisitor',right:'Konkrétna implementácia operácie'},{left:'Element.accept()',right:'Prijme Visitora a zavolá visit(this)'},{left:'Double dispatch',right:'Výber metódy závisí od dvoch typov'}]},
+
+// ===== 50 KÓDOVÝCH OTÁZOK – Design Patterns =====
+
+// ────────────────────────────────────────
+// SINGLETON (8 otázok)
+// ────────────────────────────────────────
+
+{type:'fill',topic:'P3',q:'Ktorý návrhový vzor je použitý v nasledujúcom kóde? Napíš názov lowercase.\n\npublic class Database {\n    private static Database instance;\n    private Database() {}\n    public static Database getInstance() {\n        if (instance == null) {\n            instance = new Database();\n        }\n        return instance;\n    }\n}',answer:['singleton','Singleton'],hint:'Zabezpečuje jednu inštanciu'},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup nasledujúceho kódu?\n\npublic class Config {\n    private static Config instance;\n    private int count = 0;\n    private Config() {}\n    public static Config getInstance() {\n        if (instance == null) instance = new Config();\n        return instance;\n    }\n    public void increment() { count++; }\n    public int getCount() { return count; }\n}\n\nConfig a = Config.getInstance();\nConfig b = Config.getInstance();\na.increment();\na.increment();\nb.increment();\nSystem.out.println(b.getCount());',answer:['3'],hint:'a a b sú tá istá inštancia'},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup?\n\nConfig a = Config.getInstance();\nConfig b = Config.getInstance();\nSystem.out.println(a == b);',answer:['true'],hint:'Porovnáva referencie'},
+
+{type:'fill',topic:'P3',q:'Doplň chýbajúce kľúčové slovo na miesto ___:\n\npublic class Logger {\n    private ___ Logger instance;\n    private Logger() {}\n    public ___ Logger getInstance() {\n        if (instance == null) instance = new Logger();\n        return instance;\n    }\n}',answer:['static','Static'],hint:'Prístup bez inštancie'},
+
+{type:'single',topic:'P3',q:'Čo sa stane pri pokuse skompilovať tento kód?\n\npublic class Singleton {\n    private static Singleton instance;\n    private Singleton() {}\n    public static Singleton getInstance() {\n        if (instance == null) instance = new Singleton();\n        return instance;\n    }\n}\n// v main:\nSingleton s = new Singleton();',options:['Vytvorí sa nová inštancia','Kompilačná chyba – konštruktor je private','Runtime výnimka','Vráti existujúcu inštanciu'],answer:[1]},
+
+{type:'single',topic:'P3',q:'Ktorá implementácia Singletonu je thread-safe bez synchronized?\n\nA)\npublic class S {\n    private static S i;\n    private S(){}\n    public static S get(){if(i==null)i=new S();return i;}\n}\n\nB)\npublic class S {\n    private static final S i = new S();\n    private S(){}\n    public static S get(){return i;}\n}',options:['A – lazy initialization','B – eager initialization','Obe sú thread-safe','Žiadna nie je thread-safe'],answer:[1]},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup?\n\npublic class Counter {\n    private static Counter instance;\n    private int val = 0;\n    private Counter() {}\n    public static Counter get() {\n        if (instance == null) instance = new Counter();\n        return instance;\n    }\n    public int next() { return ++val; }\n}\n\nSystem.out.print(Counter.get().next() + \" \");\nSystem.out.print(Counter.get().next() + \" \");\nSystem.out.print(Counter.get().next());',answer:['1 2 3'],hint:'Singleton – stále tá istá inštancia'},
+
+{type:'order',topic:'P3',q:'Zoraď kroky implementácie Singleton triedy v správnom poradí:',items:['Deklaruj private static premennú pre inštanciu','Vytvor private konštruktor','Vytvor public static metódu getInstance()','V getInstance() skontroluj či instance == null','Ak áno – vytvor novú inštanciu','Vráť inštanciu'],answer:[0,1,2,3,4,5]},
+
+// ────────────────────────────────────────
+// OBSERVER (9 otázok)
+// ────────────────────────────────────────
+
+{type:'fill',topic:'P3',q:'Ktorý návrhový vzor je použitý v nasledujúcom kóde? Napíš názov lowercase.\n\ninterface Listener {\n    void onEvent(String data);\n}\n\nclass EventSource {\n    private List&lt;Listener&gt; listeners = new ArrayList&lt;&gt;();\n    public void addListener(Listener l) { listeners.add(l); }\n    public void removeListener(Listener l) { listeners.remove(l); }\n    public void fireEvent(String data) {\n        for (Listener l : listeners) l.onEvent(data);\n    }\n}',answer:['observer','Observer'],hint:'Subject notifikuje zaregistrovaných...'},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup nasledujúceho kódu?\n\nclass Radio {\n    List&lt;Listener&gt; list = new ArrayList&lt;&gt;();\n    void add(Listener l) { list.add(l); }\n    void broadcast(String msg) {\n        for (Listener l : list) l.onEvent(msg);\n    }\n}\ninterface Listener { void onEvent(String s); }\n\nRadio r = new Radio();\nr.add(s -&gt; System.out.print(\"A:\" + s + \" \"));\nr.add(s -&gt; System.out.print(\"B:\" + s));\nr.broadcast(\"Hi\");',answer:['A:Hi B:Hi'],hint:'Obaja listenery dostanú rovnakú správu'},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup?\n\nclass Subject {\n    List&lt;Observer&gt; obs = new ArrayList&lt;&gt;();\n    int state = 0;\n    void attach(Observer o) { obs.add(o); }\n    void setState(int s) { state = s; notifyAll_(); }\n    void notifyAll_() { for (Observer o : obs) o.update(state); }\n}\ninterface Observer { void update(int val); }\n\nSubject s = new Subject();\ns.attach(v -&gt; System.out.print(v + \" \"));\ns.attach(v -&gt; System.out.print(v * 2 + \" \"));\ns.setState(5);',answer:['5 10'],hint:'Každý observer reaguje po svojom'},
+
+{type:'single',topic:'P3',q:'Čo sa stane v tomto kóde?\n\nclass NewsAgency {\n    List&lt;Channel&gt; channels = new ArrayList&lt;&gt;();\n    void subscribe(Channel c) { channels.add(c); }\n    void publish(String news) {\n        for (Channel c : channels) c.update(news);\n    }\n}\n\nNewsAgency agency = new NewsAgency();\nagency.publish(\"Breaking News!\");',options:['Vypíše \"Breaking News!\"','Nič sa nestane – zoznam observerov je prázdny','NullPointerException','Kompilačná chyba'],answer:[1]},
+
+{type:'fill',topic:'P3',q:'Doplň chýbajúcu metódu na miesto ___ aby Observer pattern fungoval:\n\nclass Store {\n    List&lt;Customer&gt; customers = new ArrayList&lt;&gt;();\n    void register(Customer c) { customers.add(c); }\n    void newProduct(String name) {\n        for (Customer c : customers) c._____(name);\n    }\n}',answer:['notify','update','onEvent'],hint:'Metóda na oznámenie observerovi'},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup?\n\nclass Sensor {\n    List&lt;Display&gt; displays = new ArrayList&lt;&gt;();\n    void add(Display d) { displays.add(d); }\n    void remove(Display d) { displays.remove(d); }\n    void measure(int temp) {\n        for (Display d : displays) d.show(temp);\n    }\n}\ninterface Display { void show(int t); }\n\nSensor s = new Sensor();\nDisplay d1 = t -&gt; System.out.print(t + \"C \");\nDisplay d2 = t -&gt; System.out.print(t + \"F \");\ns.add(d1);\ns.add(d2);\ns.measure(25);\ns.remove(d1);\ns.measure(30);',answer:['25C 25F 30F'],hint:'Po remove d1 zostáva len d2'},
+
+{type:'single',topic:'P3',q:'Aký typ vzťahu je medzi Subject a Observer v Observer patterne?',options:['1:1 – Subject má vždy presne jedného Observera','1:N – jeden Subject, veľa Observerov (loose coupling)','N:1 – veľa Subjectov, jeden Observer','N:N – vždy rovnaký počet oboch'],answer:[1]},
+
+{type:'single',topic:'P3',q:'Ktorý riadok v Swing kóde reprezentuje „registráciu Observera"?\n\n1: JButton btn = new JButton(\"Click\");\n2: btn.addActionListener(e -&gt; System.out.println(\"Clicked\"));\n3: frame.add(btn);\n4: frame.setVisible(true);',options:['Riadok 1','Riadok 2 – addActionListener registruje listener (Observer)','Riadok 3','Riadok 4'],answer:[1]},
+
+{type:'order',topic:'P3',q:'Zoraď kroky Observer mechanizmu pri zmene stavu:',items:['Observer sa zaregistruje cez subscribe/add','Subject zmení svoj vnútorný stav','Subject iteruje cez zoznam observerov','Na každom observerovi zavolá update/notify','Observer spracuje notifikáciu'],answer:[0,1,2,3,4]},
+
+// ────────────────────────────────────────
+// STRATEGY (8 otázok)
+// ────────────────────────────────────────
+
+{type:'fill',topic:'P3',q:'Ktorý návrhový vzor je použitý v nasledujúcom kóde? Napíš názov lowercase.\n\ninterface SortAlgorithm {\n    void sort(int[] arr);\n}\nclass BubbleSort implements SortAlgorithm {\n    public void sort(int[] arr) { /* bubble sort */ }\n}\nclass QuickSort implements SortAlgorithm {\n    public void sort(int[] arr) { /* quick sort */ }\n}\nclass Sorter {\n    private SortAlgorithm algorithm;\n    public void setAlgorithm(SortAlgorithm a) { algorithm = a; }\n    public void doSort(int[] arr) { algorithm.sort(arr); }\n}',answer:['strategy','Strategy'],hint:'Vymeniteľné algoritmy'},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup nasledujúceho kódu?\n\ninterface Greeting { String greet(String name); }\nclass Formal implements Greeting {\n    public String greet(String n) { return \"Dear \" + n; }\n}\nclass Casual implements Greeting {\n    public String greet(String n) { return \"Hey \" + n; }\n}\nclass Greeter {\n    Greeting strategy;\n    void set(Greeting g) { strategy = g; }\n    String say(String n) { return strategy.greet(n); }\n}\n\nGreeter g = new Greeter();\ng.set(new Formal());\nSystem.out.print(g.say(\"Bob\") + \", \");\ng.set(new Casual());\nSystem.out.print(g.say(\"Bob\"));',answer:['Dear Bob, Hey Bob'],hint:'Stratégia sa mení za behu'},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup?\n\ninterface Pay { String pay(int amount); }\nclass Card implements Pay {\n    public String pay(int a) { return \"Card:\" + a; }\n}\nclass Cash implements Pay {\n    public String pay(int a) { return \"Cash:\" + a; }\n}\nclass Checkout {\n    Pay method;\n    void set(Pay p) { method = p; }\n    String process(int a) { return method.pay(a); }\n}\n\nCheckout c = new Checkout();\nc.set(new Card());\nSystem.out.print(c.process(100) + \" \");\nc.set(new Cash());\nSystem.out.print(c.process(50));',answer:['Card:100 Cash:50'],hint:'Dve rôzne stratégie platby'},
+
+{type:'single',topic:'P3',q:'Čo sa stane pri spustení tohto kódu?\n\nclass Navigator {\n    RouteStrategy strategy;\n    void setStrategy(RouteStrategy s) { strategy = s; }\n    void navigate() { strategy.buildRoute(); }\n}\n\nNavigator nav = new Navigator();\nnav.navigate();',options:['Zavolá sa defaultná stratégia','NullPointerException – strategy je null','Kompilačná chyba','Nevypíše nič'],answer:[1]},
+
+{type:'fill',topic:'P3',q:'Doplň chýbajúce slovo na miesto ___:\n\ninterface Compressor { byte[] compress(byte[] data); }\nclass ZipCompressor ___ Compressor {\n    public byte[] compress(byte[] data) { /* ZIP */ return data; }\n}',answer:['implements'],hint:'Kľúčové slovo pre implementáciu interface'},
+
+{type:'single',topic:'P3',q:'Ktorý princíp SOLID priamo podporuje Strategy pattern tým, že nové algoritmy pridávame ako nové triedy?\n\nA) Single Responsibility\nB) Open-Closed Principle\nC) Liskov Substitution\nD) Dependency Inversion',options:['A – Single Responsibility','B – Open-Closed Principle (otvorený pre rozšírenie, uzavretý pre zmenu)','C – Liskov Substitution','D – Dependency Inversion'],answer:[1]},
+
+{type:'single',topic:'P3',q:'Aký je rozdiel medzi Strategy a priamym if-else?\n\nif (type.equals(\"A\")) doA();\nelse if (type.equals(\"B\")) doB();\nelse doC();\n\nvs.\n\ncontext.setStrategy(strategyMap.get(type));\ncontext.execute();',options:['Žiadny rozdiel – výsledok je rovnaký','Strategy umožňuje pridať nový algoritmus bez zmeny existujúceho kódu','if-else je vždy lepšie','Strategy je pomalšie a zložitejšie bez výhody'],answer:[1]},
+
+{type:'order',topic:'P3',q:'Zoraď kroky použitia Strategy patterna v kóde:',items:['Definuj Strategy interface s metódou execute()','Vytvor ConcreteStrategy triedy implementujúce interface','Vytvor Context triedu s referenciou na Strategy','Klient nastaví konkrétnu stratégiu cez setter','Context zavolá strategy.execute()'],answer:[0,1,2,3,4]},
+
+// ────────────────────────────────────────
+// DECORATOR (9 otázok)
+// ────────────────────────────────────────
+
+{type:'fill',topic:'P3',q:'Ktorý návrhový vzor je použitý v nasledujúcom kóde? Napíš názov lowercase.\n\ninterface DataProcessor {\n    void process(String data);\n}\nclass BasicProcessor implements DataProcessor {\n    public void process(String data) {\n        System.out.println(\"Processing: \" + data);\n    }\n}\nclass EncryptionProcessor implements DataProcessor {\n    private DataProcessor wrapped;\n    EncryptionProcessor(DataProcessor p) { this.wrapped = p; }\n    public void process(String data) {\n        System.out.print(\"Encrypting -&gt; \");\n        wrapped.process(data);\n    }\n}',answer:['decorator','Decorator'],hint:'Obaľovanie (wrapping) objektu'},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup nasledujúceho kódu?\n\ninterface Drink { String describe(); int cost(); }\nclass Coffee implements Drink {\n    public String describe() { return \"Coffee\"; }\n    public int cost() { return 2; }\n}\nclass MilkDecorator implements Drink {\n    Drink drink;\n    MilkDecorator(Drink d) { drink = d; }\n    public String describe() { return drink.describe() + \"+Milk\"; }\n    public int cost() { return drink.cost() + 1; }\n}\nclass SugarDecorator implements Drink {\n    Drink drink;\n    SugarDecorator(Drink d) { drink = d; }\n    public String describe() { return drink.describe() + \"+Sugar\"; }\n    public int cost() { return drink.cost() + 1; }\n}\n\nDrink d = new Coffee();\nd = new MilkDecorator(d);\nd = new SugarDecorator(d);\nSystem.out.println(d.describe() + \" $\" + d.cost());',answer:['Coffee+Milk+Sugar $4'],hint:'Dekorátory sa reťazia'},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup?\n\ninterface Text { String get(); }\nclass Plain implements Text {\n    String s;\n    Plain(String s) { this.s = s; }\n    public String get() { return s; }\n}\nclass Upper implements Text {\n    Text t;\n    Upper(Text t) { this.t = t; }\n    public String get() { return t.get().toUpperCase(); }\n}\nclass Bracket implements Text {\n    Text t;\n    Bracket(Text t) { this.t = t; }\n    public String get() { return \"[\" + t.get() + \"]\"; }\n}\n\nText t = new Plain(\"hello\");\nt = new Upper(t);\nt = new Bracket(t);\nSystem.out.println(t.get());',answer:['[HELLO]'],hint:'Najprv upper, potom bracket'},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup ak zmeníme poradie dekorátorov?\n\nText t = new Plain(\"hello\");\nt = new Bracket(t);\nt = new Upper(t);\nSystem.out.println(t.get());',answer:['[HELLO]'],hint:'toUpperCase() sa aplikuje na celý výsledok vrátane zátvoriek'},
+
+{type:'single',topic:'P3',q:'Ktorý riadok v Java I/O používa Decorator pattern?\n\n1: File file = new File(\"data.txt\");\n2: FileReader fr = new FileReader(file);\n3: BufferedReader br = new BufferedReader(fr);\n4: String line = br.readLine();',options:['Riadok 1','Riadok 2','Riadok 3 – BufferedReader obaľuje FileReader a pridáva buffering','Riadok 4'],answer:[2]},
+
+{type:'fill',topic:'P3',q:'Doplň ___ aby Decorator fungoval správne:\n\nclass LoggingProcessor implements DataProcessor {\n    private DataProcessor ___;\n    LoggingProcessor(DataProcessor p) { this.___ = p; }\n    public void process(String data) {\n        System.out.println(\"Log: \" + data);\n        ___.process(data);\n    }\n}',answer:['wrapped','next','inner','delegate'],hint:'Referencia na obalený objekt'},
+
+{type:'single',topic:'P3',q:'Koľko vrstiev dekorátorov môžeme reťaziť?\n\nDrink d = new Coffee();\nd = new MilkDecorator(d);\nd = new SugarDecorator(d);\nd = new MilkDecorator(d); // dvojitá porcia mlieka',options:['Maximálne 2','Maximálne 3','Ľubovoľný počet – dekorátory sa dajú ľubovoľne skladať','Závisí od typu dekorátora'],answer:[2]},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup?\n\ninterface Msg { String get(); }\nclass Base implements Msg {\n    public String get() { return \"Hi\"; }\n}\nclass Exclaim implements Msg {\n    Msg m;\n    Exclaim(Msg m) { this.m = m; }\n    public String get() { return m.get() + \"!\"; }\n}\n\nMsg m = new Exclaim(new Exclaim(new Base()));\nSystem.out.println(m.get());',answer:['Hi!!'],hint:'Dva Exclaim dekorátory = dva výkričníky'},
+
+{type:'order',topic:'P3',q:'Zoraď kroky volania metódy cez reťaz dekorátorov (zvonka dovnútra):',items:['Klient zavolá metódu na vonkajšom Decoratore','Vonkajší Decorator vykoná svoju logiku','Vonkajší Decorator deleguje na vnútorný objekt','Vnútorný objekt (ConcreteComponent) vykoná pôvodnú operáciu','Výsledok sa vráti cez vrstvy späť'],answer:[0,1,2,3,4]},
+
+// ────────────────────────────────────────
+// COMPOSITE (8 otázok)
+// ────────────────────────────────────────
+
+{type:'fill',topic:'P6',q:'Ktorý návrhový vzor je použitý v nasledujúcom kóde? Napíš názov lowercase.\n\ninterface FileSystem { int getSize(); }\nclass File implements FileSystem {\n    int size;\n    File(int s) { size = s; }\n    public int getSize() { return size; }\n}\nclass Folder implements FileSystem {\n    List&lt;FileSystem&gt; children = new ArrayList&lt;&gt;();\n    void add(FileSystem f) { children.add(f); }\n    public int getSize() {\n        int total = 0;\n        for (FileSystem f : children) total += f.getSize();\n        return total;\n    }\n}',answer:['composite','Composite'],hint:'Stromová štruktúra s listami a uzlami'},
+
+{type:'fill',topic:'P6',q:'Aký bude výstup nasledujúceho kódu?\n\nFolder root = new Folder();\nroot.add(new File(10));\nroot.add(new File(20));\nFolder sub = new Folder();\nsub.add(new File(5));\nsub.add(new File(15));\nroot.add(sub);\nSystem.out.println(root.getSize());',answer:['50'],hint:'10+20+5+15'},
+
+{type:'fill',topic:'P6',q:'Aký bude výstup?\n\ninterface Component { void display(String indent); }\nclass Leaf implements Component {\n    String name;\n    Leaf(String n) { name = n; }\n    public void display(String indent) {\n        System.out.println(indent + name);\n    }\n}\nclass Composite implements Component {\n    String name;\n    List&lt;Component&gt; children = new ArrayList&lt;&gt;();\n    Composite(String n) { name = n; }\n    void add(Component c) { children.add(c); }\n    public void display(String indent) {\n        System.out.println(indent + name);\n        for (Component c : children) c.display(indent + \"  \");\n    }\n}\n\nComposite root = new Composite(\"root\");\nroot.add(new Leaf(\"a\"));\nroot.add(new Leaf(\"b\"));\nroot.display(\"\");',answer:['root\n  a\n  b','root\\n  a\\n  b'],hint:'root, potom odsadené a, b'},
+
+{type:'single',topic:'P6',q:'Čo sa stane pri tomto kóde?\n\nFolder root = new Folder();\nFolder sub = new Folder();\nroot.add(sub);\nsub.add(root); // cyklická referencia\nSystem.out.println(root.getSize());',options:['Vypíše 0','StackOverflowError – nekonečná rekurzia','Kompilačná chyba','Vypíše -1'],answer:[1]},
+
+{type:'fill',topic:'P6',q:'Doplň ___ na správne miesto:\n\nclass Department implements OrgUnit {\n    List&lt;OrgUnit&gt; members = new ArrayList&lt;&gt;();\n    void add(OrgUnit u) { members.add(u); }\n    public int headcount() {\n        int total = 0;\n        for (OrgUnit u : members) total += u.___();\n        return total;\n    }\n}',answer:['headcount'],hint:'Rekurzívne volanie rovnakej metódy'},
+
+{type:'single',topic:'P6',q:'Ktorý komponent v Swing používa Composite pattern?',options:['JButton – tlačidlo','JLabel – text','JPanel – kontajner, ktorý obsahuje ďalšie komponenty (aj ďalšie JPanel)','JTextField – textové pole'],answer:[2]},
+
+{type:'fill',topic:'P6',q:'Aký bude výstup?\n\nFolder f = new Folder();\nf.add(new File(3));\nFolder f2 = new Folder();\nf2.add(new File(7));\nf2.add(new File(2));\nf.add(f2);\nf.add(new File(1));\nSystem.out.println(f.getSize());',answer:['13'],hint:'3 + (7+2) + 1'},
+
+{type:'order',topic:'P6',q:'Zoraď kroky výpočtu v Composite štruktúre (súborový systém):',items:['Zavolaj getSize() na koreňovom Folder','Folder iteruje cez svoje children','Pre File (Leaf) vráti priamo svoju veľkosť','Pre vnorený Folder zavolá getSize() rekurzívne','Sčítaj výsledky a vráť celkovú veľkosť'],answer:[0,1,2,3,4]},
+
+// ────────────────────────────────────────
+// VISITOR – kódové otázky (8 otázok)
+// ────────────────────────────────────────
+
+{type:'fill',topic:'P3',q:'Ktorý návrhový vzor je použitý v nasledujúcom kóde? Napíš názov lowercase.\n\ninterface Shape { void accept(ShapeVisitor v); }\nclass Circle implements Shape {\n    double radius;\n    Circle(double r) { radius = r; }\n    public void accept(ShapeVisitor v) { v.visitCircle(this); }\n}\nclass Rectangle implements Shape {\n    double w, h;\n    Rectangle(double w, double h) { this.w = w; this.h = h; }\n    public void accept(ShapeVisitor v) { v.visitRectangle(this); }\n}\ninterface ShapeVisitor {\n    void visitCircle(Circle c);\n    void visitRectangle(Rectangle r);\n}',answer:['visitor','Visitor'],hint:'accept() + visit() = double dispatch'},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup nasledujúceho kódu?\n\nclass AreaVisitor implements ShapeVisitor {\n    public void visitCircle(Circle c) {\n        System.out.print(\"C \");\n    }\n    public void visitRectangle(Rectangle r) {\n        System.out.print(\"R \");\n    }\n}\n\nList&lt;Shape&gt; shapes = List.of(new Circle(1), new Rectangle(2,3), new Circle(5));\nShapeVisitor v = new AreaVisitor();\nfor (Shape s : shapes) s.accept(v);',answer:['C R C'],hint:'Circle, Rectangle, Circle'},
+
+{type:'fill',topic:'P3',q:'Doplň chýbajúci kód na miesto ___:\n\nclass Triangle implements Shape {\n    public void accept(ShapeVisitor v) {\n        v.___(this);\n    }\n}',answer:['visitTriangle'],hint:'visit + názov triedy'},
+
+{type:'single',topic:'P3',q:'Čo je \"double dispatch\" v tomto kóde?\n\ncircle.accept(areaVisitor);\n// vnútri accept():\n// visitor.visitCircle(this);',options:['Dve volania metódy – accept() závisí od typu Shape, visitCircle() od typu Visitor','Dvojitá dedičnosť','Dve inštancie toho istého objektu','Dvojitý Singleton'],answer:[0]},
+
+{type:'fill',topic:'P3',q:'Aký bude výstup?\n\ninterface Animal { void accept(AnimalVisitor v); }\nclass Dog implements Animal {\n    public void accept(AnimalVisitor v) { v.visitDog(this); }\n}\nclass Cat implements Animal {\n    public void accept(AnimalVisitor v) { v.visitCat(this); }\n}\ninterface AnimalVisitor {\n    void visitDog(Dog d);\n    void visitCat(Cat c);\n}\nclass SoundVisitor implements AnimalVisitor {\n    public void visitDog(Dog d) { System.out.print(\"Woof \"); }\n    public void visitCat(Cat c) { System.out.print(\"Meow \"); }\n}\n\nList&lt;Animal&gt; animals = List.of(new Cat(), new Dog(), new Cat());\nAnimalVisitor v = new SoundVisitor();\nfor (Animal a : animals) a.accept(v);',answer:['Meow Woof Meow'],hint:'Cat, Dog, Cat'},
+
+{type:'single',topic:'P3',q:'Aká je hlavná nevýhoda Visitor patterna?',options:['Nemôže pracovať s interface','Pridanie nového typu Elementu vyžaduje zmenu VŠETKÝCH Visitor tried','Je príliš pomalý','Nemôže mať viacero Visitorov'],answer:[1]},
+
+{type:'single',topic:'P3',q:'Prečo Element volá visitor.visit(this) namiesto toho, aby Visitor priamo zavolal metódu na Elemente?\n\nclass Circle implements Shape {\n    public void accept(ShapeVisitor v) {\n        v.visitCircle(this); // prečo takto?\n    }\n}',options:['Kvôli výkonu','Kvôli double dispatch – Java nevie za behu rozlíšiť typ Shape, ale this je konkrétny Circle','Kvôli thread-safety','Kvôli enkapsulácii'],answer:[1]},
+
+{type:'order',topic:'P3',q:'Zoraď kroky vykonania Visitor operácie:',items:['Klient vytvorí ConcreteVisitor','Klient zavolá element.accept(visitor)','Element zavolá visitor.visitX(this) – double dispatch','ConcreteVisitor vykoná operáciu na danom type Elementu','Výsledok sa spracuje v Visitorovi'],answer:[0,1,2,3,4]},
 ];
