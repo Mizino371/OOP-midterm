@@ -695,7 +695,7 @@ const questions = [
 
 {type:'fill',topic:'P3',q:'Aký bude výstup nasledujúceho kódu?\n\nclass AreaVisitor implements ShapeVisitor {\n    public void visitCircle(Circle c) {\n        System.out.print(\"C \");\n    }\n    public void visitRectangle(Rectangle r) {\n        System.out.print(\"R \");\n    }\n}\n\nList&lt;Shape&gt; shapes = List.of(new Circle(1), new Rectangle(2,3), new Circle(5));\nShapeVisitor v = new AreaVisitor();\nfor (Shape s : shapes) s.accept(v);',answer:['C R C'],hint:'Circle, Rectangle, Circle'},
 
-{type:'fill',topic:'P3',q:'Doplň chýbajúci kód na miesto ___:\n\nclass Triangle implements Shape {\n    public void accept(ShapeVisitor v) {\n        v.___(this);\n    }\n}',answer:['visitTriangle'],hint:'visit + názov triedy'},
+{type:'single',topic:'P3',q:'Čo patrí na miesto ___ v metóde accept()?\n\ninterface ShapeVisitor {\n    void visitCircle(Circle c);\n    void visitRectangle(Rectangle r);\n    void visitTriangle(Triangle t); // pridaná metóda\n}\nclass Triangle implements Shape {\n    public void accept(ShapeVisitor v) {\n        ___;\n    }\n}',options:['v.visitTriangle(this)','v.visit(this)','v.accept(Triangle.class)','visitor.visitShape(this)'],answer:[0],hint:'Visitor volá visit + názov triedy, odovzdáme this'},
 
 {type:'single',topic:'P3',q:'Čo je \"double dispatch\" v tomto kóde?\n\ncircle.accept(areaVisitor);\n// vnútri accept():\n// visitor.visitCircle(this);',options:['Dve volania metódy – accept() závisí od typu Shape, visitCircle() od typu Visitor','Dvojitá dedičnosť','Dve inštancie toho istého objektu','Dvojitý Singleton'],answer:[0]},
 
@@ -727,8 +727,18 @@ function shuffle(arr) {
 }
 
 function pickQuestions() {
-  const shuffled = shuffle(questions);
-  return shuffled.slice(0, QUIZ_SIZE).map(q => JSON.parse(JSON.stringify(q)));
+  const MIN_CODE = 2;
+  const picked = shuffle(questions).slice(0, QUIZ_SIZE);
+  const codeCount = picked.filter(q => q.q.includes('\n')).length;
+  if (codeCount >= MIN_CODE) return picked.map(q => JSON.parse(JSON.stringify(q)));
+  // Not enough code questions — swap in the missing ones
+  const need = MIN_CODE - codeCount;
+  const notInPicked = questions.filter(q => q.q.includes('\n') && !picked.includes(q));
+  const extras = shuffle(notInPicked).slice(0, need);
+  const nonCodeIndices = picked.reduce((acc, q, i) => { if (!q.q.includes('\n')) acc.push(i); return acc; }, []);
+  const toReplace = shuffle(nonCodeIndices).slice(0, need);
+  toReplace.forEach((idx, i) => { picked[idx] = extras[i]; });
+  return shuffle(picked).map(q => JSON.parse(JSON.stringify(q)));
 }
 
 function startQuiz(qs) {
