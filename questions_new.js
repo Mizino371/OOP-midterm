@@ -445,7 +445,7 @@ const questions = [
 
 {type:'single',topic:'P3',q:'Ktorý riadok v Java I/O používa Decorator pattern?\n\n1: File file = new File(\"data.txt\");\n2: FileReader fr = new FileReader(file);\n3: BufferedReader br = new BufferedReader(fr);\n4: String line = br.readLine();',options:['Riadok 1','Riadok 2','Riadok 3 – BufferedReader obaľuje FileReader a pridáva buffering','Riadok 4'],answer:[2]},
 
-{type:'fill',topic:'P3',q:'Doplň ___ aby Decorator fungoval správne:\n\nclass LoggingProcessor implements DataProcessor {\n    private DataProcessor ___;\n    LoggingProcessor(DataProcessor p) { this.___ = p; }\n    public void process(String data) {\n        System.out.println(\"Log: \" + data);\n        ___.process(data);\n    }\n}',answer:['wrapped','next','inner','delegate'],hint:'Referencia na obalený objekt'},
+{type:'fill',topic:'P3',q:'Doplň typ premennej ___ aby Decorator fungoval správne:\n\nclass LoggingProcessor implements DataProcessor {\n    private ___ wrapped;\n    LoggingProcessor(DataProcessor p) { this.wrapped = p; }\n    public void process(String data) {\n        System.out.println(\"Log: \" + data);\n        wrapped.process(data);\n    }\n}',answer:['DataProcessor'],hint:'Dekorátor drží referenciu na obalený objekt cez rozhranie'},
 
 {type:'single',topic:'P3',q:'Koľko vrstiev dekorátorov môžeme reťaziť?\n\nDrink d = new Coffee();\nd = new MilkDecorator(d);\nd = new SugarDecorator(d);\nd = new MilkDecorator(d); // dvojitá porcia mlieka',options:['Maximálne 2','Maximálne 3','Ľubovoľný počet – dekorátory sa dajú ľubovoľne skladať','Závisí od typu dekorátora'],answer:[2]},
 
