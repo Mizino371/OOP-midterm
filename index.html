@@ -80,7 +80,7 @@ code,pre,.mono{font-family:var(--mono)}
 
 /* Options (single/multi) */
 .options-list{display:flex;flex-direction:column;gap:.6rem;list-style:none}
-.option-btn{width:100%;text-align:left;padding:.9rem 1.1rem;background:var(--surface2);border:2px solid transparent;border-radius:var(--radius-sm);font-family:var(--font);font-size:.95rem;color:var(--text);cursor:pointer;transition:all .2s ease;display:flex;align-items:center;gap:.75rem;line-height:1.5}
+.option-btn{width:100%;text-align:left;padding:.9rem 1.1rem;background:var(--surface2);border:2px solid transparent;border-radius:var(--radius-sm);font-family:var(--font);font-size:.95rem;color:var(--text);cursor:pointer;transition:all .2s ease;display:flex;align-items:flex-start;gap:.75rem;line-height:1.5}
 .option-btn:hover:not(.disabled){border-color:var(--accent);background:rgba(108,99,255,.08)}
 .option-btn.selected{border-color:var(--accent);background:rgba(108,99,255,.12)}
 .option-btn.correct{border-color:var(--green);background:var(--green-bg)}
@@ -90,7 +90,7 @@ code,pre,.mono{font-family:var(--mono)}
 .option-btn.selected .marker{border-color:var(--accent);background:var(--accent);color:#fff}
 .option-btn.correct .marker{border-color:var(--green);background:var(--green);color:#fff}
 .option-btn.incorrect .marker{border-color:var(--red);background:var(--red);color:#fff}
-.option-btn .option-text{flex:1}
+.option-btn .option-text{flex:1;white-space:pre-wrap;word-break:break-word}
 .option-btn .option-text code{background:var(--surface3);padding:.1em .35em;border-radius:3px;font-size:.88em}
 
 /* Fill input */
@@ -675,7 +675,7 @@ const questions = [
 
 {type:'fill',topic:'P6',q:'Aký bude výstup nasledujúceho kódu?\n\nFolder root = new Folder();\nroot.add(new File(10));\nroot.add(new File(20));\nFolder sub = new Folder();\nsub.add(new File(5));\nsub.add(new File(15));\nroot.add(sub);\nSystem.out.println(root.getSize());',answer:['50'],hint:'10+20+5+15'},
 
-{type:'fill',topic:'P6',q:'Aký bude výstup?\n\ninterface Component { void display(String indent); }\nclass Leaf implements Component {\n    String name;\n    Leaf(String n) { name = n; }\n    public void display(String indent) {\n        System.out.println(indent + name);\n    }\n}\nclass Composite implements Component {\n    String name;\n    List&lt;Component&gt; children = new ArrayList&lt;&gt;();\n    Composite(String n) { name = n; }\n    void add(Component c) { children.add(c); }\n    public void display(String indent) {\n        System.out.println(indent + name);\n        for (Component c : children) c.display(indent + \"  \");\n    }\n}\n\nComposite root = new Composite(\"root\");\nroot.add(new Leaf(\"a\"));\nroot.add(new Leaf(\"b\"));\nroot.display(\"\");',answer:['root\n  a\n  b','root\\n  a\\n  b'],hint:'root, potom odsadené a, b'},
+{type:'single',topic:'P6',q:'Aký bude výstup?\n\ninterface Component { void display(String indent); }\nclass Leaf implements Component {\n    String name;\n    Leaf(String n) { name = n; }\n    public void display(String indent) {\n        System.out.println(indent + name);\n    }\n}\nclass Composite implements Component {\n    String name;\n    List&lt;Component&gt; children = new ArrayList&lt;&gt;();\n    Composite(String n) { name = n; }\n    void add(Component c) { children.add(c); }\n    public void display(String indent) {\n        System.out.println(indent + name);\n        for (Component c : children) c.display(indent + \"  \");\n    }\n}\n\nComposite root = new Composite(\"root\");\nroot.add(new Leaf(\"a\"));\nroot.add(new Leaf(\"b\"));\nroot.display(\"\");',options:['root\na\nb','root\n  a\n  b','  root\n    a\n    b','root\n    a\n    b'],answer:[1]},
 
 {type:'single',topic:'P6',q:'Čo sa stane pri tomto kóde?\n\nFolder root = new Folder();\nFolder sub = new Folder();\nroot.add(sub);\nsub.add(root); // cyklická referencia\nSystem.out.println(root.getSize());',options:['Vypíše 0','StackOverflowError – nekonečná rekurzia','Kompilačná chyba','Vypíše -1'],answer:[1]},
 
