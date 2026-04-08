@@ -727,8 +727,11 @@ function shuffle(arr) {
 }
 
 function pickQuestions() {
-  const shuffled = shuffle(questions);
-  return shuffled.slice(0, QUIZ_SIZE).map(q => JSON.parse(JSON.stringify(q)));
+  const codeQs = questions.filter(q => q.q.includes('\n'));
+  const otherQs = questions.filter(q => !q.q.includes('\n'));
+  const pickedCode = shuffle(codeQs).slice(0, 2);
+  const remaining = shuffle(otherQs).slice(0, QUIZ_SIZE - 2);
+  return shuffle([...pickedCode, ...remaining]).map(q => JSON.parse(JSON.stringify(q)));
 }
 
 function startQuiz(qs) {
