@@ -727,11 +727,18 @@ function shuffle(arr) {
 }
 
 function pickQuestions() {
-  const codeQs = questions.filter(q => q.q.includes('\n'));
-  const otherQs = questions.filter(q => !q.q.includes('\n'));
-  const pickedCode = shuffle(codeQs).slice(0, 2);
-  const remaining = shuffle(otherQs).slice(0, QUIZ_SIZE - 2);
-  return shuffle([...pickedCode, ...remaining]).map(q => JSON.parse(JSON.stringify(q)));
+  const MIN_CODE = 2;
+  const picked = shuffle(questions).slice(0, QUIZ_SIZE);
+  const codeCount = picked.filter(q => q.q.includes('\n')).length;
+  if (codeCount >= MIN_CODE) return picked.map(q => JSON.parse(JSON.stringify(q)));
+  // Not enough code questions — swap in the missing ones
+  const need = MIN_CODE - codeCount;
+  const notInPicked = questions.filter(q => q.q.includes('\n') && !picked.includes(q));
+  const extras = shuffle(notInPicked).slice(0, need);
+  const nonCodeIndices = picked.reduce((acc, q, i) => { if (!q.q.includes('\n')) acc.push(i); return acc; }, []);
+  const toReplace = shuffle(nonCodeIndices).slice(0, need);
+  toReplace.forEach((idx, i) => { picked[idx] = extras[i]; });
+  return shuffle(picked).map(q => JSON.parse(JSON.stringify(q)));
 }
 
 function startQuiz(qs) {
